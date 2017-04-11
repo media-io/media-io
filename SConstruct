@@ -1,4 +1,4 @@
-EnsureSConsVersion(2, 5, 0)
+EnsureSConsVersion(2, 3, 0)
 
 mediaioVersionMajor = "0"
 mediaioVersionMinor = "0"
