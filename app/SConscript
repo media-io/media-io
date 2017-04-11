@@ -1,0 +1,33 @@
+
+Import('env')
+Import('apiLib')
+Import('hostLib')
+Import('hostCLib')
+
+pluginsApp = env.Program(
+	"mediaio-plugins",
+	Glob("plugins/*.c"),
+	LIBS = [
+		hostCLib,
+	]
+)
+
+engineApp = env.Program(
+	"mediaio",
+	Glob("engine/*.c"),
+	LIBS = [
+		apiLib,
+		hostCLib,
+	]
+)
+
+installApp = env.Install("bin", [
+	pluginsApp,
+	engineApp,
+])
+
+env.Alias("install", installApp)
+env.Depends(installApp, [
+	pluginsApp,
+	engineApp
+])

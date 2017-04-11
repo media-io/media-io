@@ -1,0 +1,51 @@
+
+Import('env')
+
+conf = Configure(env)
+
+env = conf.Finish()
+
+commonLib = env.SharedLibrary(
+	'mediaio-common',
+	Glob('mediaio/common/*.cpp'),
+	LIBS = [
+	],
+)
+
+apiLib = env.SharedLibrary(
+	'mediaio-api',
+	Glob('mediaio/api/*/*.c'),
+	LIBS = [
+		commonLib,
+	],
+)
+
+hostLib = env.SharedLibrary(
+	'mediaio-host',
+	Glob('mediaio/host/*.cpp'),
+	LIBS = [
+		apiLib,
+		commonLib,
+	],
+)
+
+hostCLib = env.SharedLibrary(
+	'mediaio-host-c',
+	Glob('mediaio/host_c/*.cpp'),
+	LIBS = [
+		commonLib,
+		hostLib,
+	],
+)
+
+env.Alias('install', env.InstallVersionedLib('lib', commonLib))
+env.Alias('install', env.InstallVersionedLib('lib', apiLib))
+env.Alias('install', env.InstallVersionedLib('lib', hostLib))
+env.Alias('install', env.InstallVersionedLib('lib', hostCLib))
+
+env.Alias('install', env.Install('include/mediaio/api/', Glob('mediaio/api/*/*.h')))
+
+Export('commonLib')
+Export('apiLib')
+Export('hostLib')
+Export('hostCLib')
