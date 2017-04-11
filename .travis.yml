@@ -1,4 +1,6 @@
 language: cpp
+dist: trusty
+sudo: required
 
 os:
   - linux
@@ -7,12 +9,6 @@ os:
 compiler:
   - gcc
   - clang
-
-addons:
-  apt:
-    sources: ['boost-latest']
-    packages:
-    - scons
 
 install:
   - ./tools/travis/install_dependencies.sh
