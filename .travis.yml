@@ -8,5 +8,10 @@ compiler:
   - gcc
   - clang
 
+addons:
+  apt:
+    packages:
+    - scons
+
 script:
   - scons --install-sandbox=`pwd`/dist
