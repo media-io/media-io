@@ -10,8 +10,12 @@ compiler:
 
 addons:
   apt:
+    sources: ['boost-latest']
     packages:
     - scons
+
+install:
+  - ./tools/travis/install_dependencies.sh
 
 script:
   - scons --install-sandbox=`pwd`/dist
