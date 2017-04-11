@@ -1,6 +1,7 @@
 #include "Plugins.hpp"
 
 #include <iostream>
+#include <cstring>
 
 Plugins::Plugins()
 {

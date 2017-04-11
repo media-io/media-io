@@ -1,7 +1,7 @@
 #ifndef _MEDIAIO_API_COMMON_COMMON_H_
 #define _MEDIAIO_API_COMMON_COMMON_H_
 
-#include <stddef.h> // for size_t
+#include <stddef.h>
 #include <stdbool.h>
 #include <inttypes.h>
 

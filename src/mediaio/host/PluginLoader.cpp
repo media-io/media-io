@@ -4,7 +4,7 @@
 #include <mediaio/common/PluginBinary.hpp>
 
 #include <iostream>
-
+#include <cstring>
 // #define PLUGIN_LOADER_DEBUG 1
 
 using namespace mediaio::common;
@@ -114,7 +114,7 @@ void PluginLoader::scanDirectory(std::set<std::string> &foundBinFiles, const std
 				_binaries.push_back(pluginBinary);
 				_knownBinFiles.insert(binpath);
 				
-				for(size_t pluginIndex = 0 ; pluginIndex < pluginBinary->getNPlugins(); ++pluginIndex)
+				for(int pluginIndex = 0 ; pluginIndex < pluginBinary->getNPlugins(); ++pluginIndex)
 				{
 					MediaioPlugin* plug = &pluginBinary->getPlugin(pluginIndex);
 					_plugins.push_back( plug );
