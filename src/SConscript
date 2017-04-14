@@ -1,4 +1,5 @@
 
+import os
 Import('env')
 
 conf = Configure(env)
@@ -43,7 +44,24 @@ env.Alias('install', env.InstallVersionedLib('lib', apiLib))
 env.Alias('install', env.InstallVersionedLib('lib', hostLib))
 env.Alias('install', env.InstallVersionedLib('lib', hostCLib))
 
-env.Alias('install', env.Install('include/mediaio/api/', Glob('mediaio/api/*/*.h')))
+paths = [
+	'mediaio/api/common',
+	'mediaio/api/data',
+	'mediaio/api/instance',
+	'mediaio/api/metadata',
+	'mediaio/api/reader',
+	'mediaio/api/writer',
+	'mediaio/api/unwrapper',
+	'mediaio/api/wrapper',
+	'mediaio/api/decoder',
+	'mediaio/api/encoder',
+	'mediaio/api/generator',
+	'mediaio/api/filter',
+	'mediaio/api/analyser',
+]
+
+for path in paths:
+	env.Alias('install', env.Install(os.path.join('include', path), Glob(os.path.join(path, "*.h"))))
 
 Export('commonLib')
 Export('apiLib')

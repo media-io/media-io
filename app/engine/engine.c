@@ -1,5 +1,5 @@
 
-#include <mediaio/host_c/plugins.hpp>
+#include <mediaio/host_c/plugins.h>
 #include <mediaio/api/common/api.h>
 #include <mediaio/api/instance/instance.h>
 #include <mediaio/api/reader/reader.h>

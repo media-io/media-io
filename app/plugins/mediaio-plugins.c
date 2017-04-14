@@ -1,5 +1,5 @@
 
-#include <mediaio/host_c/plugins.hpp>
+#include <mediaio/host_c/plugins.h>
 #include <mediaio/api/common/colors.h>
 #include <mediaio/api/reader/reader.h>
 #include <mediaio/api/writer/writer.h>

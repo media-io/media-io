@@ -17,6 +17,7 @@ engineApp = env.Program(
 	Glob("engine/*.c"),
 	LIBS = [
 		apiLib,
+		hostLib,
 		hostCLib,
 	]
 )

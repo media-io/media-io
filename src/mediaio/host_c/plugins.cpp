@@ -1,8 +1,7 @@
 
 #include <mediaio/host/Plugins.hpp>
 
-#include "plugins.hpp"
-#include <iostream>
+#include "plugins.h"
 
 static Plugins plugins;
 

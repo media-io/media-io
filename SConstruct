@@ -30,6 +30,7 @@ env.Append(
         '-Wall',
         '-fPIC',
         '-std=c++11',
+        '-std=c++0x',
         '-DMEDIAIO_VERSION_MAJOR=' + mediaioVersionMajor,
         '-DMEDIAIO_VERSION_MINOR=' + mediaioVersionMinor,
         '-DMEDIAIO_VERSION_MICRO=' + mediaioVersionMicro,
