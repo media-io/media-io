@@ -10,6 +10,7 @@ commonLib = env.SharedLibrary(
 	'mediaio-common',
 	Glob('mediaio/common/*.cpp'),
 	LIBS = [
+		'dl'
 	],
 )
 
@@ -25,8 +26,8 @@ hostLib = env.SharedLibrary(
 	'mediaio-host',
 	Glob('mediaio/host/*.cpp'),
 	LIBS = [
-		apiLib,
 		commonLib,
+		apiLib,
 	],
 )
 
@@ -35,6 +36,7 @@ hostCLib = env.SharedLibrary(
 	Glob('mediaio/host_c/*.cpp'),
 	LIBS = [
 		commonLib,
+		apiLib,
 		hostLib,
 	],
 )

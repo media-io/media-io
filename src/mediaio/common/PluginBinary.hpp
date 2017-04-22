@@ -51,7 +51,7 @@ public:
 	{
 		return _fileModificationTime;
 	}
-    
+
 	size_t getFileSize()
 	{
 		return _fileSize;

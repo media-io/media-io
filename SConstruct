@@ -23,9 +23,6 @@ env.Append(
         '#src',
         '/usr/local/include/',
     ],
-    DPATH = [
-        '#src',
-    ],
     CXXFLAGS = [
         '-Wall',
         '-fPIC',

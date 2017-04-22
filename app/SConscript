@@ -1,6 +1,7 @@
 
 Import('env')
 Import('apiLib')
+Import('commonLib')
 Import('hostLib')
 Import('hostCLib')
 
@@ -8,6 +9,9 @@ pluginsApp = env.Program(
 	"mediaio-plugins",
 	Glob("plugins/*.c"),
 	LIBS = [
+		apiLib,
+		commonLib,
+		hostLib,
 		hostCLib,
 	]
 )
@@ -17,6 +21,7 @@ engineApp = env.Program(
 	Glob("engine/*.c"),
 	LIBS = [
 		apiLib,
+		commonLib,
 		hostLib,
 		hostCLib,
 	]

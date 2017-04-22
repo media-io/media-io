@@ -47,7 +47,7 @@ int main(int argc, char** argv)
 	int plugin_count = get_plugin_count();
 
 	printf("Plugins: total = %d\n", plugin_count);
-	printf("%s%-12s%-8s%-36s%-20s%s\n", kColorGreen, "API", "Version", "Identifier", "Label", "Description");
+	printf("%s%-12s%-8s%-36s%-20s%s%s\n", kColorGreen, "API", "Version", "Identifier", "Label", "Description", kColorNone);
 
 	print_plugins(kMediaioReaderPluginApi,    "Reader",    kColorPink);
 	print_plugins(kMediaioWriterPluginApi,    "Writer",    kColorDark);
