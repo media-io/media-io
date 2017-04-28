@@ -39,7 +39,24 @@ typedef enum MediaioPluginApi
 	PluginApiAnalyser,
 } MediaioPluginApi;
 
+typedef enum MediaioPluginAction
+{
+	PluginActionUnknown = 0,
+	PluginActionInstance,
+	PluginActionReader,
+	PluginActionWriter,
+	PluginActionUnwrapper,
+	PluginActionWrapper,
+	PluginActionDecoder,
+	PluginActionEncoder,
+	PluginActionGenerator,
+	PluginActionFilter,
+	PluginActionAnalyser,
+} MediaioPluginAction;
+
 const char* get_api_str(enum MediaioPluginApi api);
+const char* get_action_str(enum MediaioPluginAction api);
+enum MediaioPluginAction get_action(const char* api);
 
 #ifdef __cplusplus
 }
