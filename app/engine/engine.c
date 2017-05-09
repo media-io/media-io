@@ -35,7 +35,6 @@ int get_plugin_instance(const char* searched_name, enum MediaioPluginApi api, st
 		printf("unable to create instance of plugin");
 		return kMediaioStatusFailed;
 	}
-
 	pi->api = api;
 	pi->plugin = plugin;
 	return kMediaioStatusOK;
@@ -127,16 +126,17 @@ int main(int argc, char** argv)
 		exit(-1);
 	if(get_plugin_instance("filesystem", PluginApiWriter, &pi_writer) != kMediaioStatusOK)
 		exit(-1);
-	if(get_plugin_instance("sequence", PluginApiUnwrapper, &pi_unwrapper) != kMediaioStatusOK)
+	if(get_plugin_instance("mxfunwrapper", PluginApiUnwrapper, &pi_unwrapper) != kMediaioStatusOK)
 		exit(-1);
 	if(get_plugin_instance("sequence", PluginApiWrapper, &pi_wrapper) != kMediaioStatusOK)
 		exit(-1);
-	if(get_plugin_instance("tiff", PluginApiDecoder, &pi_decoder) != kMediaioStatusOK)
+	if(get_plugin_instance("ffmpeg", PluginApiDecoder, &pi_decoder) != kMediaioStatusOK)
 		exit(-1);
 	if(get_plugin_instance("tiff", PluginApiEncoder, &pi_encoder) != kMediaioStatusOK)
 		exit(-1);
 
-	const char* in_filename = "/Users/marco/Movies/seq1/imf_app4_seq1.####.tiff";
+	// const char* in_filename = "/Users/marco/Movies/seq1/imf_app4_seq1.####.tiff";
+	const char* in_filename = "/Users/marco/Movies/michael_buble.mov_M6.mxf";
 	const char* out_filename = "out.####.tiff";
 
 	if(set_filename(&pi_reader, in_filename) != kMediaioStatusOK)
@@ -154,19 +154,23 @@ int main(int argc, char** argv)
 	{
 		CodedData src_packet;
 		init_coded_data(&src_packet);
-		CodedData dst_packet;
-		init_coded_data(&dst_packet);
+
+		if(unwrap_next_frame(&pi_unwrapper, &src_packet) != kMediaioStatusOK)
+		{
+			delete_coded_data(&src_packet);
+			break;
+		}
 
 		Frame frame;
 		init_frame(&frame);
-		if(unwrap_next_frame(&pi_unwrapper, &src_packet) != kMediaioStatusOK)
-		{
-			break;
-		}
 		if(decode_frame(&pi_decoder, &src_packet, &frame) != kMediaioStatusOK)
 		{
-			break;
+			delete_coded_data(&src_packet);
+			delete_frame(&frame);
+			continue;
 		}
+		CodedData dst_packet;
+		init_coded_data(&dst_packet);
 		if(encode_frame(&pi_encoder, &frame, &dst_packet) != kMediaioStatusOK)
 		{
 			break;
