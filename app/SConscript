@@ -27,13 +27,31 @@ engineApp = env.Program(
 	]
 )
 
+playerApp = env.Program(
+	"mediaio-player",
+	Glob("player/*.cpp"),
+	LIBPATH = [
+		"/usr/X11/lib",
+	],
+	LIBS = [
+		apiLib,
+		commonLib,
+		hostLib,
+		hostCLib,
+		'GL',
+		'glut'
+	]
+)
+
 installApp = env.Install("bin", [
 	pluginsApp,
 	engineApp,
+	playerApp,
 ])
 
 env.Alias("install", installApp)
 env.Depends(installApp, [
 	pluginsApp,
-	engineApp
+	engineApp,
+	playerApp
 ])
