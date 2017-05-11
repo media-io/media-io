@@ -40,7 +40,8 @@ playerApp = env.Program(
 		hostCLib,
 		'GL',
 		'GLU',
-		'glut'
+		'glut',
+		'pthread'
 	]
 )
 
