@@ -39,6 +39,7 @@ playerApp = env.Program(
 		hostLib,
 		hostCLib,
 		'GL',
+		'GLU',
 		'glut'
 	]
 )
