@@ -1,9 +1,12 @@
 FROM alpine:3.5
 
-RUN apk add --no-cache scons build-base mesa-dev freeglut-dev
-
 ADD . /src
 
 WORKDIR /src
 
-RUN scons install
+RUN runtime_deps='libstdc++' \
+    && apk add --virtual .build-dependencies --no-cache scons build-base \
+    && scons install \
+    && rm -Rf build \
+    && apk del .build-dependencies \
+    && apk add --no-cache $runtime_deps
