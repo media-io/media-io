@@ -1,4 +1,4 @@
-FROM alpine:3.3
+FROM alpine:3.5
 
 RUN apk add --no-cache scons build-base mesa-dev freeglut-dev
 
