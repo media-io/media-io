@@ -33,6 +33,7 @@ const char* get_action_str(enum MediaioPluginAction api)
 		case PluginActionGenerator: return kMediaioGetGeneratorPlugin;
 		case PluginActionFilter:    return kMediaioGetFilterPlugin;
 		case PluginActionAnalyser:  return kMediaioGetAnalyserPlugin;
+		case PluginActionUnknown:   return NULL;
 	}
 	return NULL;
 }
