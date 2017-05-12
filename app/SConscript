@@ -45,7 +45,7 @@ playerApp = env.Program(
 	]
 )
 
-installApp = env.Install("bin", [
+installApp = env.Install("$PREFIX/usr/bin", [
 	pluginsApp,
 	engineApp,
 	playerApp,

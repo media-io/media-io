@@ -6,4 +6,4 @@ ADD . /src
 
 WORKDIR /src
 
-RUN scons
+RUN scons install
