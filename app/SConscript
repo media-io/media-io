@@ -1,5 +1,6 @@
 
 Import('env')
+Import('conf')
 Import('apiLib')
 Import('commonLib')
 Import('hostLib')
@@ -16,6 +17,8 @@ pluginsApp = env.Program(
 	]
 )
 
+env.Alias("install", env.Install("$PREFIX/usr/bin", pluginsApp))
+
 engineApp = env.Program(
 	"mediaio",
 	Glob("engine/*.c"),
@@ -27,33 +30,38 @@ engineApp = env.Program(
 	]
 )
 
-playerApp = env.Program(
-	"mediaio-player",
-	Glob("player/*.cpp"),
-	LIBPATH = [
-		"/usr/X11/lib",
-	],
-	LIBS = [
-		apiLib,
-		commonLib,
-		hostLib,
-		hostCLib,
-		'GL',
-		'GLU',
-		'glut',
-		'pthread'
-	]
-)
+env.Alias("install", env.Install("$PREFIX/usr/bin", engineApp))
 
-installApp = env.Install("$PREFIX/usr/bin", [
-	pluginsApp,
-	engineApp,
-	playerApp,
-])
+opengl_libs = [
+	'GL',
+	'GLU',
+	'glut',
+	'pthread'
+]
 
-env.Alias("install", installApp)
-env.Depends(installApp, [
-	pluginsApp,
-	engineApp,
-	playerApp
-])
+opengl_headers = [
+	'GL/gl.h',
+	'GL/glut.h',
+	'GL/freeglut.h'
+]
+
+if(conf.CheckLibWithHeader(opengl_libs, opengl_headers, 'c')):
+	playerApp = env.Program(
+		"mediaio-player",
+		Glob("player/*.cpp"),
+		LIBPATH = [
+			"/usr/X11/lib",
+		],
+		LIBS = [
+			apiLib,
+			commonLib,
+			hostLib,
+			hostCLib,
+			'GL',
+			'GLU',
+			'glut',
+			'pthread'
+		]
+	)
+
+	env.Alias("install", env.Install("$PREFIX/usr/bin", playerApp))

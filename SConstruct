@@ -39,7 +39,10 @@ env.Append(
     SHLIBVERSION = mediaioVersionStr,
 )
 
+conf = Configure(env)
+
 Export('env')
+Export('conf')
 
 VariantDir('build/' + buildMode + '/src', 'src', duplicate = 0)
 VariantDir('build/' + buildMode + '/app', 'app', duplicate = 0)

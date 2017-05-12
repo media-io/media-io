@@ -1,10 +1,7 @@
 
 import os
 Import('env')
-
-conf = Configure(env)
-
-env = conf.Finish()
+Import('conf')
 
 commonLib = env.SharedLibrary(
 	'mediaio-common',
