@@ -639,15 +639,15 @@ void Window::displayNextFrame()
 				buffer[(3 * sampleSize * index) + 0 ] =     r & 0x000000ff;
 				buffer[(3 * sampleSize * index) + 1 ] = ( ( r & 0x0000ff00 ) >> 8  );
 				buffer[(3 * sampleSize * index) + 2 ] = ( ( r & 0x00ff0000 ) >> 16 );
-				buffer[(3 * sampleSize * index) + 3 ] = ( ( r & 0xff000000 ) >> 32 );
+				buffer[(3 * sampleSize * index) + 3 ] = ( ( r & 0xff000000 ) >> 24 );
 				buffer[(3 * sampleSize * index) + 4 ] =     g & 0x000000ff;
 				buffer[(3 * sampleSize * index) + 5 ] = ( ( g & 0x0000ff00 ) >> 8  );
 				buffer[(3 * sampleSize * index) + 6 ] = ( ( g & 0x00ff0000 ) >> 16 );
-				buffer[(3 * sampleSize * index) + 7 ] = ( ( g & 0xff000000 ) >> 32 );
+				buffer[(3 * sampleSize * index) + 7 ] = ( ( g & 0xff000000 ) >> 24 );
 				buffer[(3 * sampleSize * index) + 8 ] =     b & 0x000000ff;
 				buffer[(3 * sampleSize * index) + 9 ] = ( ( b & 0x0000ff00 ) >> 8  );
 				buffer[(3 * sampleSize * index) + 10] = ( ( b & 0x00ff0000 ) >> 16 );
-				buffer[(3 * sampleSize * index) + 11] = ( ( b & 0xff000000 ) >> 32 );
+				buffer[(3 * sampleSize * index) + 11] = ( ( b & 0xff000000 ) >> 24 );
 				++ptrR;
 				++ptrG;
 				++ptrB;
