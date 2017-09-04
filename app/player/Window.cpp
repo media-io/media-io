@@ -2,13 +2,8 @@
 #include "Window.hpp"
 
 #ifdef __APPLE__
-/*
- #include <OpenGL/gl3.h>
- #define __gl_h_
- #include <GLUT/glut.h>
-*/
  #include <OpenGL/gl.h>
- #include <GLUT/glut.h>
+ #include <GL/freeglut.h>
 #else
  #include <GL/gl.h>
  #include <GL/glut.h>
@@ -72,10 +67,10 @@ struct ImgProperties
 ImgProperties _imageProperties;
 
 
-void loadNewTexture( const ImgProperties& properties )
+void loadNewTexture(const ImgProperties& properties)
 {
 	// loading texture
-	glTexImage2D( GL_TEXTURE_2D, 0, properties.internalFormat, properties.width, properties.height, 0, properties.format, properties.type, properties.data );
+	glTexImage2D(GL_TEXTURE_2D, 0, properties.internalFormat, properties.width, properties.height, 0, properties.format, properties.type, properties.data);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
@@ -85,7 +80,7 @@ void loadNewTexture( const ImgProperties& properties )
 	glEnable(GL_TEXTURE_2D);
 }
 
-void loadNewTexture( const char* data, GLint internalFormat, size_t width, size_t height, GLenum format, GLenum type )
+void loadNewTexture(const char* data, GLint internalFormat, size_t width, size_t height, GLenum format, GLenum type)
 {
 	_imageProperties.data   = data;
 	_imageProperties.internalFormat = internalFormat;
@@ -94,17 +89,17 @@ void loadNewTexture( const char* data, GLint internalFormat, size_t width, size_
 	_imageProperties.format = format;
 	_imageProperties.type   = type;
 
-	switch( _imageProperties.format )
+	switch(_imageProperties.format)
 	{
 		case GL_LUMINANCE : _imageProperties.component = 1; break;
 		case GL_RGB       : _imageProperties.component = 3; break;
 		case GL_RGBA      : _imageProperties.component = 4; break;
 	}
 
-	loadNewTexture( _imageProperties );
+	loadNewTexture(_imageProperties);
 }
 
-Window::Window( Reader& reader )
+Window::Window(Reader& reader)
 {
 	_reader = &reader;
 	// _width  = _reader->getWidth();
@@ -124,14 +119,14 @@ Window::Window( Reader& reader )
 
 	_windowId = glutCreateWindow("MediaIO Player");
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f );
-	glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-	glutDisplayFunc ( display );
-	glutKeyboardFunc( keyboard );
-	glutSpecialFunc ( specialKeyboard );
-	glutMouseFunc   ( mouse );
-	glutMotionFunc  ( motion );
-	glutReshapeFunc ( reshape );
+	glutDisplayFunc(display);
+	glutKeyboardFunc(keyboard);
+	glutSpecialFunc(specialKeyboard);
+	glutMouseFunc(mouse);
+	glutMotionFunc(motion);
+	glutReshapeFunc(reshape);
 }
 
 void Window::launch()
@@ -146,10 +141,10 @@ void Window::display()
 	{
 		return;
 	}
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f );
-	glClear( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-	glBegin (GL_QUADS);
+	glBegin(GL_QUADS);
 
 	float x1 = _x1;
 	float x2 = _x2;
@@ -157,57 +152,57 @@ void Window::display()
 	float y1 = _y1;
 	float y2 = _y2;
 
-	if( _flip )
+	if(_flip)
 	{
 		y1 = -y1;
 		y2 = -y2;
 	}
-	if( _flop )
+	if(_flop)
 	{
 		x1 = -x1;
 		x2 = -x2;
 	}
 
-	glTexCoord2f( 0 , 0 );
-	glVertex2f  ( x1, y1 );
+	glTexCoord2f(0 , 0);
+	glVertex2f(x1, y1);
 
-	glTexCoord2f( 0, 1 );
-	glVertex2f  ( x1, y2 );
+	glTexCoord2f(0, 1);
+	glVertex2f(x1, y2);
 
-	glTexCoord2f( 1, 1 );
-	glVertex2f  ( x2, y2 );
+	glTexCoord2f(1, 1);
+	glVertex2f(x2, y2);
 
-	glTexCoord2f( 1, 0 );
-	glVertex2f  ( x2, y1 );
+	glTexCoord2f(1, 0);
+	glVertex2f(x2, y1);
 
 	glEnd();
 
 	glutSwapBuffers();
 }
 
-void Window::keyboard( unsigned char k, int x, int y )
+void Window::keyboard(unsigned char k, int x, int y)
 {
 	bool shift= false;
-	if( glutGetModifiers() == GLUT_ACTIVE_SHIFT )
+	if(glutGetModifiers() == GLUT_ACTIVE_SHIFT)
 	{
 		shift = true;
 	}
 
-	switch( k )
+	switch(k)
 	{
 		case '\r':
-			glutDestroyWindow( _windowId );
+			glutDestroyWindow(_windowId);
 			_windowId = 0;
 			break;
 		case 27: // ESCAPE key
-			glutDestroyWindow( _windowId );
+			glutDestroyWindow(_windowId);
 			_windowId = 0;
 			break;
 		case 'i':
 			displayInformations();
 			break;
 		case 'z':
-			glutReshapeWindow( _width, _height );
+			glutReshapeWindow(_width, _height);
 			_currentZoom = 1.0;
 			_x1 = -1.0;
 			_x2 =  1.0;
@@ -224,13 +219,13 @@ void Window::keyboard( unsigned char k, int x, int y )
 			break;
 
 		case 'r':
-			showRedChannelTexture( ); 
+			showRedChannelTexture();
 			break;
 		case 'g':
-			showGreenChannelTexture( ); 
+			showGreenChannelTexture();
 			break;
 		case 'b':
-			showBlueChannelTexture( ); 
+			showBlueChannelTexture();
 			break;
 		case 'a':
 			showAlphaChannelTexture();
@@ -257,7 +252,7 @@ void Window::keyboard( unsigned char k, int x, int y )
 	}
 }
 
-void Window::specialKeyboard( int k, int x, int y )
+void Window::specialKeyboard(int k, int x, int y)
 {
 	//std::cout << "k=" << k << " x=" << x << " y=" << y << std::endl; 
 	switch (k)
@@ -286,12 +281,12 @@ void Window::specialKeyboard( int k, int x, int y )
 	}
 }
 
-void Window::mouse( int button, int state, int x, int y )
+void Window::mouse(int button, int state, int x, int y)
 {
 	_xMouseRef = x;
 	_yMouseRef = y;
 
-	if( state == 0 && button == 0 )
+	if(state == 0 && button == 0)
 	{
 		int iX, iY;
 
@@ -303,10 +298,10 @@ void Window::mouse( int button, int state, int x, int y )
 
 		std::cout << "at " << std::setw(4) << iX << "," << std::setw(4) << (int)_imageProperties.height - iY << ": ";
 
-		for( size_t i = 0; i < _imageProperties.component; i++ )
+		for(size_t i = 0; i < _imageProperties.component; i++)
 		{
-			size_t idx = ( iX + iY * _imageProperties.width ) * _imageProperties.component + i;
-			switch( _imageProperties.type )
+			size_t idx = (iX + iY * _imageProperties.width) * _imageProperties.component + i;
+			switch(_imageProperties.type)
 			{
 				case GL_UNSIGNED_BYTE:
 				{
@@ -330,7 +325,7 @@ void Window::mouse( int button, int state, int x, int y )
 		}
 		std::cout << std::endl;
 	}
-	if( state == 0 && ( button == 3 || button == 4 ) )
+	if(state == 0 && (button == 3 || button == 4))
 	{
 		int iX, iY, iX2, iY2;
 
@@ -339,45 +334,45 @@ void Window::mouse( int button, int state, int x, int y )
 		if(button == 3)
 		{
 			_currentZoom *= _factorZoom;
-			zoom( _factorZoom );
+			zoom(_factorZoom);
 		}
 		else
 		{
 			_currentZoom /= _factorZoom;
-			zoom( 1.0 / _factorZoom );
+			zoom(1.0 / _factorZoom);
 		}
 
 		mapToImage(x, y, iX2, iY2);
 
-		move( ( _currentZoom / _imageProperties.width * 2) * (iX2 - iX),
-		      ( _currentZoom / _imageProperties.height * 2) * (iY2 - iY));
+		move( (_currentZoom / _imageProperties.width * 2) * (iX2 - iX),
+		      (_currentZoom / _imageProperties.height * 2) * (iY2 - iY));
 
-		glutPostRedisplay ();
+		glutPostRedisplay();
 	}
 }
 
-void Window::motion( int x, int y )
+void Window::motion(int x, int y)
 {
 	float x_diff, y_diff;
 
-	x_diff = ( x - _xMouseRef ) / _currentZoom;
-	y_diff = ( _yMouseRef - y ) / _currentZoom;
+	x_diff = (x - _xMouseRef) / _currentZoom;
+	y_diff = (_yMouseRef - y) / _currentZoom;
 
-	if( _flip )
+	if(_flip)
 	{
 		y_diff *= -1.0;
 	}
 
-	if( _flop )
+	if(_flop)
 	{
 		x_diff *= -1.0;
 	}
 
 	std::cout << "motion " << x_diff / _width << " . " << y_diff / _height << std::endl;
-	move( _currentZoom / _imageProperties.width  * 2 * x_diff,
-	      _currentZoom / _imageProperties.height * 2 * y_diff );
+	move(_currentZoom / _imageProperties.width  * 2 * x_diff,
+	     _currentZoom / _imageProperties.height * 2 * y_diff);
 
-	move( x_diff / _width, y_diff / _height );
+	move(x_diff / _width, y_diff / _height);
 
 	_xMouseRef = x;
 	_yMouseRef = y;
@@ -385,11 +380,11 @@ void Window::motion( int x, int y )
 	glutPostRedisplay();
 }
 
-void Window::reshape( int width, int height )
+void Window::reshape(int width, int height)
 {
 	float w, h, xPos, yPos;
 
-	if( (float) _width / _height > (float) width / height )
+	if((float) _width / _height > (float) width / height)
 	{
 		w = width;
 		h = 1.0f * _height / _width * (float)width;
@@ -409,8 +404,8 @@ void Window::reshape( int width, int height )
 
 	_scale = w / _width;
 
-	glViewport( (GLsizei) xPos, (GLsizei) yPos, (GLsizei) w, (GLsizei) h );
-	glutReshapeWindow( width, height );
+	glViewport((GLsizei) xPos, (GLsizei) yPos, (GLsizei) w, (GLsizei) h);
+	glutReshapeWindow(width, height);
 }
 
 void Window::displayHelp()
@@ -431,13 +426,13 @@ void Window::displayHelp()
 void Window::displayInformations()
 {
 	std::string textureType;
-	switch( _imageProperties.format )
+	switch(_imageProperties.format)
 	{
 		case GL_LUMINANCE : textureType = "Gray "; break;
 		case GL_RGB       : textureType = "RGB  "; break;
 		case GL_RGBA      : textureType = "RGBA "; break;
 	}
-	switch( _imageProperties.type )
+	switch(_imageProperties.type)
 	{
 		case GL_UNSIGNED_BYTE  : textureType += "unsigned 8 bits"; break;
 		case GL_UNSIGNED_SHORT : textureType += "unsigned 16 bits"; break;
@@ -450,7 +445,7 @@ void Window::displayInformations()
 	std::cout << textureType << " " << _width << "x" << _height << std::endl;
 }
 
-void Window::move( float x, float y )
+void Window::move(float x, float y)
 {
 	_x1 += x;
 	_x2 += x;
@@ -475,8 +470,8 @@ void Window::mapToImage(int x, int y, int &iX, int &iY)
 	int mapX, mapY;
 	float mx, my;
 
-	mapX = ( x - _xMinViewport ) / _scale;
-	mapY = ( y - _yMinViewport ) / _scale;
+	mapX = (x - _xMinViewport) / _scale;
+	mapY = (y - _yMinViewport) / _scale;
 
 	if( ! _flip )
 	{
@@ -495,32 +490,32 @@ void Window::mapToImage(int x, int y, int &iX, int &iY)
 	iY = ((_y1 - my) / (_currentZoom * 2.0) * (float)_imageProperties.height * -1.0) + 0.5;	
 }
 
-void Window::setTransfert( float red, float green, float blue, float alpha )
+void Window::setTransfert(float red, float green, float blue, float alpha)
 {
-	switch( _imageProperties.format )
+	switch(_imageProperties.format)
 	{
 		case GL_LUMINANCE :
 			return;
 		case GL_RGB :
-			glPixelTransferf( GL_RED_SCALE,   red );
-			glPixelTransferf( GL_GREEN_SCALE, green );
-			glPixelTransferf( GL_BLUE_SCALE,  blue );
+			glPixelTransferf(GL_RED_SCALE, red);
+			glPixelTransferf(GL_GREEN_SCALE, green);
+			glPixelTransferf(GL_BLUE_SCALE, blue);
 			break;
 		case GL_RGBA :
-			glPixelTransferf( GL_RED_SCALE,   red );
-			glPixelTransferf( GL_GREEN_SCALE, green );
-			glPixelTransferf( GL_BLUE_SCALE,  blue );
-			glPixelTransferf( GL_ALPHA_SCALE, alpha );
+			glPixelTransferf(GL_RED_SCALE, red);
+			glPixelTransferf(GL_GREEN_SCALE, green);
+			glPixelTransferf(GL_BLUE_SCALE, blue);
+			glPixelTransferf(GL_ALPHA_SCALE, alpha);
 			break;
 	}
 }
 
-void Window::displayChannelTexture( bool& channel, const float red, const float green, const float blue )
+void Window::displayChannelTexture(bool& channel, const float red, const float green, const float blue)
 {
 	ImgProperties p = _imageProperties;
-	if( ! channel )
+	if(!channel)
 	{
-		setTransfert( red, green, blue );
+		setTransfert(red, green, blue);
 		_showRedChannel   = false;
 		_showGreenChannel = false;
 		_showBlueChannel  = false;
@@ -529,95 +524,109 @@ void Window::displayChannelTexture( bool& channel, const float red, const float 
 	}
 	else
 	{
-		setTransfert( 1.f, 1.f, 1.f );
+		setTransfert(1.f, 1.f, 1.f);
 		channel = false;
 	}
-	loadNewTexture( p );
+	loadNewTexture(p);
 
 	glutPostRedisplay();
 }
 
-void Window::showRedChannelTexture( )
+void Window::showRedChannelTexture()
 {
-	displayChannelTexture( _showRedChannel, 1.f, 0.f, 0.f );
+	displayChannelTexture(_showRedChannel, 1.f, 0.f, 0.f);
 }
 
-void Window::showGreenChannelTexture( )
+void Window::showGreenChannelTexture()
 {
-	displayChannelTexture( _showGreenChannel, 0.f, 1.f, 0.f );
+	displayChannelTexture(_showGreenChannel, 0.f, 1.f, 0.f);
 }
 
-void Window::showBlueChannelTexture( )
+void Window::showBlueChannelTexture()
 {
-	displayChannelTexture( _showBlueChannel, 0.f, 0.f, 1.f );
+	displayChannelTexture(_showBlueChannel, 0.f, 0.f, 1.f);
 }
 
-void Window::showAlphaChannelTexture( )
+void Window::showAlphaChannelTexture()
 {
-	glutPostRedisplay ();
+	glutPostRedisplay();
 }
 
 void Window::displayNextFrame()
 {
-	clock_t startTime = clock();
+	// clock_t startTime = clock();
 
 	Frame frame;
 
-	_reader->readNextFrame( frame );
+	_reader->readNextFrame(frame);
 
 	_width = frame.components[0].width;
 	_height = frame.components[0].height;
 
 	std::vector<unsigned char> buffer;
-	buffer.resize( _width * _height * 3 * frame.components[0].sampleSizeInByte );
+	buffer.resize(_width * _height * 3 * frame.components[0].sampleSizeInByte);
 	
-	clock_t decodedTime = clock();
+	// clock_t decodedTime = clock();
 
 	GLenum dataType;
 	size_t sampleSize = frame.components[0].sampleSizeInByte;
-	switch( sampleSize )
+
+	unsigned char* ptrR = (unsigned char*)frame.components[0].data;
+	unsigned char* ptrG = (unsigned char*)frame.components[0].data;
+	unsigned char* ptrB = (unsigned char*)frame.components[0].data;
+
+	switch(frame.numberOfComponents)
+	{
+		case 1: {
+			ptrR = (unsigned char*) frame.components[0].data;
+			ptrG = (unsigned char*) frame.components[0].data;
+			ptrB = (unsigned char*) frame.components[0].data;
+			break;
+		}
+		case 3: {
+			ptrR = (unsigned char*) frame.components[0].data;
+			ptrG = (unsigned char*) frame.components[1].data;
+			ptrB = (unsigned char*) frame.components[2].data;
+			break;
+		}
+		default:
+			std::cout << "unsupported number of components in frame" << std::endl;
+			return;
+	}
+
+	switch(sampleSize)
 	{
 		case 1:
 		{
 			dataType = GL_UNSIGNED_BYTE;
-			unsigned char* ptrR = (unsigned char*) frame.components[0].data;
-			// unsigned char* ptrG = (unsigned char*) frame.components[1].data;
-			// unsigned char* ptrB = (unsigned char*) frame.components[2].data;
-
-			for( size_t index = 0; index < _width * _height; ++index )
+			for(size_t index = 0; index < _width * _height; ++index)
 			{
 				unsigned char r = *ptrR;
-				// unsigned char g = *ptrG;
-				// unsigned char b = *ptrB;
+				unsigned char g = *ptrG;
+				unsigned char b = *ptrB;
 				buffer[(3 * sampleSize * index) + 0] = r;
-				buffer[(3 * sampleSize * index) + 1] = r;
-				buffer[(3 * sampleSize * index) + 2] = r;
-				// buffer[(3 * sampleSize * index) + 1] = g;
-				// buffer[(3 * sampleSize * index) + 2] = b;
+				buffer[(3 * sampleSize * index) + 1] = g;
+				buffer[(3 * sampleSize * index) + 2] = b;
 				++ptrR;
-				// ++ptrG;
-				// ++ptrB;
+				++ptrG;
+				++ptrB;
 			}
 			break;
 		}
 		case 2:
 		{
 			dataType = GL_UNSIGNED_SHORT;
-			unsigned short* ptrR = (unsigned short*) frame.components[0].data;
-			unsigned short* ptrG = (unsigned short*) frame.components[1].data;
-			unsigned short* ptrB = (unsigned short*) frame.components[2].data;
-
-			for( size_t index = 0; index < _width * _height; ++index )
+			for(size_t index = 0; index < _width * _height; ++index)
 			{
 				unsigned short r = *ptrR;
 				unsigned short g = *ptrG;
 				unsigned short b = *ptrB;
-				buffer[(3 * sampleSize * index) + 0] =     r & 0x00ff;
-				buffer[(3 * sampleSize * index) + 1] = ( ( r & 0xff00 ) >> 8 );
-				buffer[(3 * sampleSize * index) + 2] =     g & 0x00ff;
-				buffer[(3 * sampleSize * index) + 3] = ( ( g & 0xff00 ) >> 8 );
-				buffer[(3 * sampleSize * index) + 4] =     b & 0x00ff;
-				buffer[(3 * sampleSize * index) + 5] = ( ( b & 0xff00 ) >> 8 );
+				buffer[(3 * sampleSize * index) + 0] =   r & 0x00ff;
+				buffer[(3 * sampleSize * index) + 1] = ((r & 0xff00) >> 8);
+				buffer[(3 * sampleSize * index) + 2] =   g & 0x00ff;
+				buffer[(3 * sampleSize * index) + 3] = ((g & 0xff00) >> 8);
+				buffer[(3 * sampleSize * index) + 4] =   b & 0x00ff;
+				buffer[(3 * sampleSize * index) + 5] = ((b & 0xff00) >> 8);
 				++ptrR;
 				++ptrG;
 				++ptrB;
@@ -627,36 +636,35 @@ void Window::displayNextFrame()
 		case 4:
 		{
 			dataType = GL_UNSIGNED_INT;
-			unsigned int* ptrR = (unsigned int*) frame.components[0].data;
-			unsigned int* ptrG = (unsigned int*) frame.components[1].data;
-			unsigned int* ptrB = (unsigned int*) frame.components[2].data;
-
-			for( size_t index = 0; index < _width * _height; ++index )
+			for(size_t index = 0; index < _width * _height; ++index)
 			{
 				unsigned int r = *ptrR;
 				unsigned int g = *ptrG;
 				unsigned int b = *ptrB;
-				buffer[(3 * sampleSize * index) + 0 ] =     r & 0x000000ff;
-				buffer[(3 * sampleSize * index) + 1 ] = ( ( r & 0x0000ff00 ) >> 8  );
-				buffer[(3 * sampleSize * index) + 2 ] = ( ( r & 0x00ff0000 ) >> 16 );
-				buffer[(3 * sampleSize * index) + 3 ] = ( ( r & 0xff000000 ) >> 24 );
-				buffer[(3 * sampleSize * index) + 4 ] =     g & 0x000000ff;
-				buffer[(3 * sampleSize * index) + 5 ] = ( ( g & 0x0000ff00 ) >> 8  );
-				buffer[(3 * sampleSize * index) + 6 ] = ( ( g & 0x00ff0000 ) >> 16 );
-				buffer[(3 * sampleSize * index) + 7 ] = ( ( g & 0xff000000 ) >> 24 );
-				buffer[(3 * sampleSize * index) + 8 ] =     b & 0x000000ff;
-				buffer[(3 * sampleSize * index) + 9 ] = ( ( b & 0x0000ff00 ) >> 8  );
-				buffer[(3 * sampleSize * index) + 10] = ( ( b & 0x00ff0000 ) >> 16 );
-				buffer[(3 * sampleSize * index) + 11] = ( ( b & 0xff000000 ) >> 24 );
+				buffer[(3 * sampleSize * index) + 0 ] =   r & 0x000000ff;
+				buffer[(3 * sampleSize * index) + 1 ] = ((r & 0x0000ff00) >> 8);
+				buffer[(3 * sampleSize * index) + 2 ] = ((r & 0x00ff0000) >> 16);
+				buffer[(3 * sampleSize * index) + 3 ] = ((r & 0xff000000) >> 24);
+				buffer[(3 * sampleSize * index) + 4 ] =   g & 0x000000ff;
+				buffer[(3 * sampleSize * index) + 5 ] = ((g & 0x0000ff00) >> 8);
+				buffer[(3 * sampleSize * index) + 6 ] = ((g & 0x00ff0000) >> 16);
+				buffer[(3 * sampleSize * index) + 7 ] = ((g & 0xff000000) >> 24);
+				buffer[(3 * sampleSize * index) + 8 ] =   b & 0x000000ff;
+				buffer[(3 * sampleSize * index) + 9 ] = ((b & 0x0000ff00) >> 8);
+				buffer[(3 * sampleSize * index) + 10] = ((b & 0x00ff0000) >> 16);
+				buffer[(3 * sampleSize * index) + 11] = ((b & 0xff000000) >> 24);
 				++ptrR;
 				++ptrG;
 				++ptrB;
 			}
 			break;
 		}
+		default:
+			std::cout << "unsupported video bit depth in frame" << std::endl;
+			return;
 	}
 
-	clock_t convertTime = clock();
+	// clock_t convertTime = clock();
 
 	loadNewTexture(
 		(const char*) &buffer[0],
@@ -669,13 +677,13 @@ void Window::displayNextFrame()
 
 	clock_t loadedTime = clock();
 
-	// std::cout << "get frame = " << ( ((float) decodedTime - startTime ) / CLOCKS_PER_SEC );
-	// std::cout << " convert = " << ( ((float) convertTime - decodedTime ) / CLOCKS_PER_SEC );
-	// std::cout << " loading = " << ( ((float) loadedTime - convertTime ) / CLOCKS_PER_SEC );
-	// std::cout << " total frame = " << ( ((float) loadedTime - startTime ) / CLOCKS_PER_SEC );
-	// std::cout << " total = " << ( ((float) loadedTime - _previousTime ) / CLOCKS_PER_SEC ) << std::endl;
+	// std::cout << "get frame = " << (((float) decodedTime - startTime) / CLOCKS_PER_SEC);
+	// std::cout << " convert = " << (((float) convertTime - decodedTime) / CLOCKS_PER_SEC);
+	// std::cout << " loading = " << (((float) loadedTime - convertTime) / CLOCKS_PER_SEC);
+	// std::cout << " total frame = " << (((float) loadedTime - startTime) / CLOCKS_PER_SEC);
+	// std::cout << " total = " << (((float) loadedTime - _previousTime) / CLOCKS_PER_SEC) << std::endl;
 
-	std::cout << "\r" << ( 1.0 / ( ((float) loadedTime - _previousTime ) / CLOCKS_PER_SEC ) ) << " fps " << std::flush;
+	std::cout << "\r" << (1.0 / ( ((float) loadedTime - _previousTime) / CLOCKS_PER_SEC)) << " fps " << std::flush;
 
 	_previousTime = loadedTime;
 	delete_frame(&frame);
@@ -692,16 +700,16 @@ void Window::displayFirstFrame()
 	displayAtFrame( 0 );
 }
 
-void Window::displayAtFrame( const size_t frame )
+void Window::displayAtFrame(const size_t frame)
 {
 	_currentFrame = frame;
-	_reader->seekAtFrame( _currentFrame );
+	_reader->seekAtFrame(_currentFrame);
 	displayNextFrame();
 }
 
-void Window::loopPlaying( int value )
+void Window::loopPlaying(int value)
 {
-	if( _play )
-		glutTimerFunc( 5, &loopPlaying, 0 );
+	if(_play)
+		glutTimerFunc(5, &loopPlaying, 0);
 	displayNextFrame();
 }

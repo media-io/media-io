@@ -55,30 +55,30 @@ void Reader::configure(
 	_decoderInstance = (MediaioPluginInstance*)decoderPlugin.action_entry(kMediaioGetInstancePlugin);
 	_decoder = (MediaioPluginDecoder*)decoderPlugin.action_entry(kMediaioGetDecoderPlugin);
 
-	// std::cout << "Unwrapper : " << unwrapperPlugin.pluginIdentifier << " v" << unwrapperPlugin.pluginVersionMajor << "." << unwrapperPlugin.pluginVersionMinor << std::endl;
-	// std::cout << "Decoder   : " << decoderPlugin.pluginIdentifier << " v" << decoderPlugin.pluginVersionMajor << "." << decoderPlugin.pluginVersionMinor << std::endl;
+	// std::cout << "Unwrapper : " << unwrapperPlugin.plugin_identifier << " v" << unwrapperPlugin.plugin_version_major << "." << unwrapperPlugin.plugin_version_minor << std::endl;
+	// std::cout << "Decoder   : " << decoderPlugin.plugin_identifier << " v" << decoderPlugin.plugin_version_major << "." << decoderPlugin.plugin_version_minor << std::endl;
 
 	for(auto filterIdentifier : filtersIdentifier)
 	{
 		MediaioPlugin& filterPlugin = plugins.searchPlugin(filterIdentifier, kMediaioFilterPluginApi);
 		_filters.push_back((MediaioPluginFilter*) filterPlugin.action_entry(kMediaioGetFilterPlugin));
 		_filtersInstance.push_back((MediaioPluginInstance*) filterPlugin.action_entry(kMediaioGetInstancePlugin));
-		// std::cout << "Filter    : " << filterPlugin.pluginIdentifier << " v" << filterPlugin.pluginVersionMajor << "." << filterPlugin.pluginVersionMinor << std::endl;
+		// std::cout << "Filter    : " << filterPlugin.plugin_identifier << " v" << filterPlugin.plugin_version_major << "." << filterPlugin.plugin_version_minor << std::endl;
 	}
 
 	MediaioStatus ret;
 	ret = _readerInstance->create_instance(&_readerHandle);
-	if( ret == kMediaioStatusFailed )
+	if(ret == kMediaioStatusFailed)
 	{
 		throw std::runtime_error("unable to create instance of plugin " + readerIdentifier);
 	}
 	ret = _unwrapperInstance->create_instance(&_unwrapperHandle);
-	if( ret == kMediaioStatusFailed )
+	if(ret == kMediaioStatusFailed)
 	{
 		throw std::runtime_error("unable to create instance of plugin " + unwrapperIdentifier);
 	}
 	ret = _decoderInstance->create_instance(&_decoderHandle);
-	if( ret == kMediaioStatusFailed )
+	if(ret == kMediaioStatusFailed)
 	{
 		throw std::runtime_error("unable to create instance of plugin " + decoderIdentifier);
 	}
@@ -95,8 +95,9 @@ void Reader::configure(
 	}
 
 	_reader->set_filename(_readerHandle, filename.c_str());
-	
+
 	_unwrapper->set_reader(_unwrapperHandle, _reader, _readerHandle);
+
 	// ret = _unwrapper->open( _unwrapperHandle, filename.c_str() );
 	// if( ret != kMediaioStatusOK || ! _unwrapperHandle )
 	// {
