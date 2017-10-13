@@ -219,6 +219,9 @@ void Reader::readNextFrame(Frame& decodedFrame)
 
 		for(size_t index = 0; index < _filters.size(); ++ index)
 		{
+			// if(index == _filters.size() -1){
+				
+			// }
 			_filters.at(index)->process(_filtersHandle.at(index), &extractedFrame, &decodedFrame);
 		}
 
@@ -231,6 +234,7 @@ void Reader::readNextFrame(Frame& decodedFrame)
 		// std::cout << " total = " << ( ((float) decodedTime - startTime ) / CLOCKS_PER_SEC ) << std::endl;
 
 		delete_coded_data(&codedFrame);
+		delete_frame(&extractedFrame);
 		return;
 	}
 }

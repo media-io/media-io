@@ -32,36 +32,26 @@ engineApp = env.Program(
 
 env.Alias("install", env.Install("$PREFIX/usr/bin", engineApp))
 
-opengl_libs = [
-	'GL',
-	'GLU',
-	'glut',
+sdl_libs = [
+	'SDL2',
 	'pthread'
 ]
 
-opengl_headers = [
-	'GL/gl.h',
-	'GL/glut.h',
-	'GL/freeglut.h'
+sdl_headers = [
+	'SDL2/SDL.h',
+	'SDL2/SDL_thread.h'
 ]
 
-if(conf.CheckLibWithHeader(opengl_libs, opengl_headers, 'c')):
+if(conf.CheckLibWithHeader(sdl_libs, sdl_headers, 'c')):
 	playerApp = env.Program(
 		"mediaio-player",
 		Glob("player/*.cpp"),
-		LIBPATH = [
-			"/usr/X11/lib",
-		],
 		LIBS = [
 			apiLib,
 			commonLib,
 			hostLib,
 			hostCLib,
-			'GL',
-			'GLU',
-			'glut',
-			'pthread'
-		]
+		] + sdl_libs
 	)
 
 	env.Alias("install", env.Install("$PREFIX/usr/bin", playerApp))

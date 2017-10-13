@@ -15,6 +15,7 @@ struct MediaioPluginFilter;
 
 class Reader
 {
+	typedef const std::map< std::string, std::string>& Parameters;
 public:
 	Reader();
 	~Reader();
@@ -28,17 +29,17 @@ public:
 		const std::string& filename
 	);
 
-	void setUnwrapperParameters( const std::map< std::string, std::string>& parameters );
-	void setDecoderParameters( const std::map< std::string, std::string>& parameters );
-	void setFilterParameters( size_t index, const std::map< std::string, std::string>& parameters );
+	void setUnwrapperParameters(Parameters parameters);
+	void setDecoderParameters(Parameters parameters);
+	void setFilterParameters(size_t index, Parameters parameters);
 
-	void disableDecoding( const bool enableDecoding = false );
+	void disableDecoding(const bool enableDecoding = false);
 
 	void preload();
 
-	void readNextFrame( Frame& decodedFrame );
+	void readNextFrame(Frame& decodedFrame);
 
-	void seekAtFrame( long int frameIndex );
+	void seekAtFrame(long int frameIndex);
 
 private:
 	MediaioPluginInstance*              _readerInstance;

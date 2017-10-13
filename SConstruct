@@ -40,7 +40,7 @@ def add_and_parse_library_option(library_name, include=['include'], lib=['lib'])
         for sub_dir in lib:
             external_lib_paths.append(os.path.join(library_root, sub_dir))
 
-add_and_parse_library_option('gl')
+add_and_parse_library_option('SDL2')
 
 colors = {}
 colors['cyan']   = '\033[96m'
