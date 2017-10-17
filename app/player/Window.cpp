@@ -13,6 +13,9 @@
 #define REFRESH_RATE 0.01
 
 Reader* Window::_reader = NULL;
+long int Window::_readFrameIndex = 0;
+long int Window::_displayFrameIndex = 0;
+
 SDL_Thread* read_tid = NULL;
 
 static bool is_full_screen;
@@ -96,6 +99,7 @@ int Window::read_thread(void *arg) {
 	for(;;) {
 		Frame* frame = new Frame();
 		Window::_reader->readNextFrame(*frame);
+		_readFrameIndex += 1;
 		frame_queue.push(frame);
 	}
 }
@@ -117,7 +121,7 @@ static int realloc_texture(Uint32 new_format, SDL_BlendMode blendmode, int new_w
 	return 0;
 }
 
-static void video_refresh()
+void Window::video_refresh()
 {
 	Frame* frame = frame_queue.pop();
 
@@ -140,6 +144,8 @@ static void video_refresh()
 		rect.w = frame->components[0].width;
 		rect.h = frame->components[0].height;
 		SDL_RenderCopy(renderer, texture, NULL, &rect);
+		_displayFrameIndex += 1;
+		std::cout << "\rread frame index: " << _readFrameIndex << " display frame index : " << _displayFrameIndex << std::flush;
 		delete frame;
 
 		SDL_RenderPresent(renderer);
@@ -159,10 +165,10 @@ static void do_exit()
 static void toggle_full_screen()
 {
 	is_full_screen = !is_full_screen;
-	SDL_SetWindowFullscreen(window, is_full_screen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+	SDL_SetWindowFullscreen(window, is_full_screen ? SDL_WINDOW_FULLSCREEN_DESKTOP: 0);
 }
 
-static void refresh_loop_wait_event(SDL_Event *event) {
+void Window::refresh_loop_wait_event(SDL_Event *event) {
 	double remaining_time = 0.0;
 	SDL_PumpEvents();
 	while (!SDL_PeepEvents(event, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT)) {
@@ -172,6 +178,7 @@ static void refresh_loop_wait_event(SDL_Event *event) {
 		if (!paused || force_refresh){
 			video_refresh();
 			force_refresh = false;
+			remaining_time = 1.0/30.0;
 		}
 
 		SDL_PumpEvents();

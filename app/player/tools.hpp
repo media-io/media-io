@@ -14,6 +14,6 @@ int mio_usleep(unsigned usec)
     Sleep(usec / 1000);
     return 0;
 #else
-    return AVERROR(ENOSYS);
+    return -1;
 #endif
 }
