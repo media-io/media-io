@@ -13,7 +13,6 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
-#include <cuda.h>
 
 struct PluginInstance
 {
