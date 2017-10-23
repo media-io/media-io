@@ -1,10 +1,7 @@
 
 import os
 Import('env')
-
-conf = Configure(env)
-
-env = conf.Finish()
+Import('conf')
 
 commonLib = env.SharedLibrary(
 	'mediaio-common',
@@ -41,10 +38,10 @@ hostCLib = env.SharedLibrary(
 	],
 )
 
-env.Alias('install', env.InstallVersionedLib('lib', commonLib))
-env.Alias('install', env.InstallVersionedLib('lib', apiLib))
-env.Alias('install', env.InstallVersionedLib('lib', hostLib))
-env.Alias('install', env.InstallVersionedLib('lib', hostCLib))
+env.Alias('install', env.InstallVersionedLib('$PREFIX/usr/lib', commonLib))
+env.Alias('install', env.InstallVersionedLib('$PREFIX/usr/lib', apiLib))
+env.Alias('install', env.InstallVersionedLib('$PREFIX/usr/lib', hostLib))
+env.Alias('install', env.InstallVersionedLib('$PREFIX/usr/lib', hostCLib))
 
 paths = [
 	'mediaio/api/common',
@@ -63,7 +60,7 @@ paths = [
 ]
 
 for path in paths:
-	env.Alias('install', env.Install(os.path.join('include', path), Glob(os.path.join(path, "*.h"))))
+	env.Alias('install', env.Install(os.path.join('$PREFIX/usr/include', path), Glob(os.path.join(path, "*.h"))))
 
 Export('commonLib')
 Export('apiLib')

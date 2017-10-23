@@ -1,5 +1,6 @@
 
 #include "component.h"
+#include <stdio.h>
 
 void init_component(Component* component)
 {
@@ -19,11 +20,13 @@ void resize_component(Component* component, unsigned int requiredSize)
 {
 	if(component->allocatedSize == 0)
 	{
+		// printf("allocate memory %s\n", requiredSize);
 		component->data = malloc(requiredSize);
 		component->allocatedSize = requiredSize;
 	}
 	else if(component->allocatedSize < requiredSize)
 	{
+		// printf("re-allocate memory %s\n", requiredSize);
 		component->data = realloc(component->data, requiredSize);
 		component->allocatedSize = requiredSize;
 	}
@@ -34,6 +37,7 @@ void delete_component(Component* component)
 {
 	if(component->data)
 	{
+		// printf("free memory\n");
 		free(component->data);
 		init_component(component);
 	}

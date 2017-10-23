@@ -1,5 +1,6 @@
 
 Import('env')
+Import('conf')
 Import('apiLib')
 Import('commonLib')
 Import('hostLib')
@@ -16,6 +17,8 @@ pluginsApp = env.Program(
 	]
 )
 
+env.Alias("install", env.Install("$PREFIX/usr/bin", pluginsApp))
+
 engineApp = env.Program(
 	"mediaio",
 	Glob("engine/*.c"),
@@ -28,13 +31,36 @@ engineApp = env.Program(
 	]
 )
 
-installApp = env.Install("bin", [
-	pluginsApp,
-	engineApp,
-])
+env.Alias("install", env.Install("$PREFIX/usr/bin", engineApp))
 
-env.Alias("install", installApp)
-env.Depends(installApp, [
-	pluginsApp,
-	engineApp,
-])
+sdl_libs = [
+	'SDL2',
+	'pthread'
+]
+
+sdl_headers = [
+	'SDL2/SDL.h',
+	'SDL2/SDL_thread.h'
+]
+
+if(conf.CheckLibWithHeader(sdl_libs, sdl_headers, 'c')):
+	playerApp = env.Program(
+		"mediaio-player",
+		Glob("player/*.cpp"),
+		LIBS = [
+			apiLib,
+			commonLib,
+			hostLib,
+			hostCLib,
+		] + sdl_libs
+	)
+	env.Alias("install", env.Install("$PREFIX/usr/bin", playerApp))
+
+# env.Alias("install", installApp)
+# env.Depends(installApp, [
+# 	pluginsApp,
+# 	engineApp,
+# 	playerApp,
+# ])
+
+

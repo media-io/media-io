@@ -38,7 +38,6 @@ int get_plugin_instance(const char* searched_name, enum MediaioPluginApi api, st
 		printf("unable to create instance of plugin");
 		return kMediaioStatusFailed;
 	}
-
 	pi->api = api;
 	pi->plugin = plugin;
 	return kMediaioStatusOK;
@@ -123,10 +122,10 @@ int encode_frame(struct PluginInstance* pi, Frame* frame, CodedData* packet)
 
 static void *task(void *p_data)
 {
-   // puts ("create unused thread for link main exec with pthread, required for turingcodec");
+	// puts ("create unused thread for link main exec with pthread, required for turingcodec");
 
-   (void) p_data;
-   return NULL;
+	(void) p_data;
+	return NULL;
 }
 
 int main(int argc, char** argv)
@@ -138,34 +137,34 @@ int main(int argc, char** argv)
 
 	// struct PluginInstance pi_reader;
 	struct PluginInstance pi_writer;
-	// struct PluginInstance pi_unwrapper;
+	struct PluginInstance pi_unwrapper;
 	struct PluginInstance pi_wrapper;
-	// struct PluginInstance pi_decoder;
-	struct PluginInstance pi_generator;
+	struct PluginInstance pi_decoder;
+	// struct PluginInstance pi_generator;
 	struct PluginInstance pi_encoder;
 
 	// if(get_plugin_instance("filesystem", PluginApiReader, &pi_reader) != kMediaioStatusOK)
 	// 	exit(-1);
 	if(get_plugin_instance("filesystem", PluginApiWriter, &pi_writer) != kMediaioStatusOK)
 		exit(-1);
-	// if(get_plugin_instance("sequence", PluginApiUnwrapper, &pi_unwrapper) != kMediaioStatusOK)
-	// 	exit(-1);
-	// if(get_plugin_instance("raw", PluginApiWrapper, &pi_wrapper) != kMediaioStatusOK)
-	// 	exit(-1);
-	if(get_plugin_instance("gpac", PluginApiWrapper, &pi_wrapper) != kMediaioStatusOK)
+
+	if(get_plugin_instance("mxfunwrapper", PluginApiUnwrapper, &pi_unwrapper) != kMediaioStatusOK)
 		exit(-1);
 	// if(get_plugin_instance("bento_ts", PluginApiWrapper, &pi_wrapper) != kMediaioStatusOK)
 	// 	exit(-1);
 	// if(get_plugin_instance("tiff", PluginApiDecoder, &pi_decoder) != kMediaioStatusOK)
 	// 	exit(-1);
-	if(get_plugin_instance("constant", PluginApiGenerator, &pi_generator) != kMediaioStatusOK)
-		exit(-1);
 	if(get_plugin_instance("turing", PluginApiEncoder, &pi_encoder) != kMediaioStatusOK)
 		exit(-1);
+
+	if(get_plugin_instance("ffmpeg", PluginApiDecoder, &pi_decoder) != kMediaioStatusOK)
+		exit(-1);
+
 	// if(get_plugin_instance("nvidiaencoder", PluginApiEncoder, &pi_encoder) != kMediaioStatusOK)
 	// 	exit(-1);
 
 	// const char* in_filename = "/Users/marco/Movies/seq1/imf_app4_seq1.####.tiff";
+	const char* in_filename = "/Users/marco/Movies/michael_buble.mov_M6.mxf";
 	const char* out_filename = "stream.ts";
 
 	// if(set_filename(&pi_reader, in_filename) != kMediaioStatusOK)
@@ -183,28 +182,27 @@ int main(int argc, char** argv)
 	{
 		CodedData src_packet;
 		init_coded_data(&src_packet);
-		CodedData dst_packet;
-		init_coded_data(&dst_packet);
 
 		// printf("process frame %d\r", count);
 		printf("process frame %d\n", count);
 		fflush(stdout);
 
-		Frame frame;
-		init_frame(&frame);
-		// if(unwrap_next_frame(&pi_unwrapper, &src_packet) != kMediaioStatusOK)
-		// {
-		// 	break;
-		// }
-		// if(decode_frame(&pi_decoder, &src_packet, &frame) != kMediaioStatusOK)
-		// {
-		// 	break;
-		// }
-		if(generate_frame(&pi_generator, &frame) != kMediaioStatusOK)
+		if(unwrap_next_frame(&pi_unwrapper, &src_packet) != kMediaioStatusOK)
 		{
-			printf("Failed to generate frame\n");
+			delete_coded_data(&src_packet);
 			break;
 		}
+
+		Frame frame;
+		init_frame(&frame);
+		if(decode_frame(&pi_decoder, &src_packet, &frame) != kMediaioStatusOK)
+		{
+			delete_coded_data(&src_packet);
+			delete_frame(&frame);
+			continue;
+		}
+		CodedData dst_packet;
+		init_coded_data(&dst_packet);
 		if(encode_frame(&pi_encoder, &frame, &dst_packet) != kMediaioStatusOK)
 		{
 			printf("Failed to encode frame\n");
@@ -249,9 +247,9 @@ int main(int argc, char** argv)
 
 	// delete_plugin_instance(&pi_reader);
 	delete_plugin_instance(&pi_writer);
-	// delete_plugin_instance(&pi_unwrapper);
-	// delete_plugin_instance(&pi_decoder);
-	delete_plugin_instance(&pi_generator);
+	delete_plugin_instance(&pi_unwrapper);
+	delete_plugin_instance(&pi_decoder);
+	// delete_plugin_instance(&pi_generator);
 	delete_plugin_instance(&pi_encoder);
 	delete_plugin_instance(&pi_wrapper);
 
