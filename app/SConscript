@@ -24,6 +24,7 @@ engineApp = env.Program(
 		commonLib,
 		hostLib,
 		hostCLib,
+		"pthread",
 	]
 )
 
@@ -35,5 +36,5 @@ installApp = env.Install("bin", [
 env.Alias("install", installApp)
 env.Depends(installApp, [
 	pluginsApp,
-	engineApp
+	engineApp,
 ])
