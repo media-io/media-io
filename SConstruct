@@ -1,3 +1,4 @@
+
 import os
 import sys
 
@@ -59,16 +60,19 @@ if not sys.stdout.isatty():
 compile_source_message = '%sCompiling              %s$SOURCE%s' % \
    (colors['blue'], colors['green'], colors['end'])
 
-compile_shared_source_message = '%sCompiling shared       %s$SOURCE%s' % \
+# compile_shared_source_message = '%sCompiling shared       %s$SOURCE%s' % \
+compile_shared_source_message = '%sCompiling shared       %s$SOURCE%s $SHCCCOM $SHCXXCOM' % \
    (colors['blue'], colors['green'], colors['end'])
 
 link_program_message = '%sLinking Program        %s$TARGET%s' % \
    (colors['blue'], colors['cyan'], colors['end'])
 
-link_library_message = '%sLinking Static Library %s$TARGET%s' % \
+# link_library_message = '%sLinking Static Library %s$TARGET%s' % \
+link_library_message = '%sLinking Static Library %s$TARGET%s: $LINKCOM' % \
    (colors['blue'], colors['cyan'], colors['end'])
 
-link_shared_library_message = '%sLinking Shared Library %s$TARGET%s' % \
+# link_shared_library_message = '%sLinking Shared Library %s$TARGET%s' % \
+link_shared_library_message = '%sLinking Shared Library %s$TARGET%s: $SHLINKCOM' % \
    (colors['blue'], colors['cyan'], colors['end'])
 
 env = Environment()
@@ -89,14 +93,23 @@ env.Append(
         '/usr/local/include/',
         external_include_paths,
     ],
+    CFLAGS = [
+        '-Wall',
+        '-fPIC',
+        '-m64',
+    ],
     CXXFLAGS = [
         '-Wall',
         '-fPIC',
+        '-m64',
         '-std=c++11',
         '-std=c++0x',
         '-DMEDIAIO_VERSION_MAJOR=' + mediaioVersionMajor,
         '-DMEDIAIO_VERSION_MINOR=' + mediaioVersionMinor,
         '-DMEDIAIO_VERSION_MICRO=' + mediaioVersionMicro,
+    ],
+    LINKFLAGS = [
+        '-m64',
     ],
     LIBPATH = [
         '#src',

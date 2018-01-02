@@ -34,7 +34,8 @@ void Binary::load()
 		return;
 
 #if defined (UNIX)
-	_dlHandle = dlopen(_binaryPath.c_str(), RTLD_LAZY);
+	_dlHandle = dlopen(_binaryPath.c_str(), RTLD_NOW);
+	// _dlHandle = dlopen(_binaryPath.c_str(), RTLD_LAZY);
 #else
 	_dlHandle = LoadLibrary(_binaryPath.c_str());
 #endif

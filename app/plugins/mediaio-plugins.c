@@ -33,6 +33,9 @@ void print_plugins(const char* context, const char* api, const char* color)
 	for(index = 0; index < plugin_count; ++index)
 	{
 		struct MediaioPlugin* plugin = plugins[index];
+		if(plugin == NULL)
+			continue;
+
 		if(strcmp(plugin->plugin_api, context))
 			continue;
 
