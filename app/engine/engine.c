@@ -101,7 +101,7 @@ int wrap_next_frame(struct PluginInstance* pi, CodedData* packet)
 	return wrapper_api->wrap_next_frame(pi->handle, 0, packet);
 }
 
-int generate_frame(struct PluginInstance* pi, Frame* frame)
+int generate_frame(struct PluginInstance* pi, ImageFrame* frame)
 {
 	MediaioPluginGenerator* generator_api = (MediaioPluginGenerator*)pi->plugin->action_entry(kMediaioGetGeneratorPlugin);
 	return generator_api->generate(pi->handle, frame);
@@ -153,7 +153,7 @@ int main(int argc, char** argv)
 	// 	exit(-1);
 	// if(get_plugin_instance("tiff", PluginApiDecoder, &pi_decoder) != kMediaioStatusOK)
 	// 	exit(-1);
-	if(get_plugin_instance("turing", PluginApiEncoder, &pi_encoder) != kMediaioStatusOK)
+	if(get_plugin_instance("turing", PluginApiImageEncoder, &pi_encoder) != kMediaioStatusOK)
 		exit(-1);
 	if(get_plugin_instance("ffmpeg", PluginApiImageDecoder, &pi_decoder) != kMediaioStatusOK)
 		exit(-1);
@@ -221,7 +221,7 @@ int main(int argc, char** argv)
 		{
 			while(true)
 			{
-				Frame* frame = NULL;
+				ImageFrame* frame = NULL;
 				CodedData dst_packet;
 				init_coded_data(&dst_packet);
 				if(encode_frame(&pi_encoder, frame, &dst_packet) != kMediaioStatusOK)
