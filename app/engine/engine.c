@@ -99,16 +99,16 @@ int wrap_next_frame(struct PluginInstance* pi, CodedData* packet)
 	return wrapper_api->wrap_next_frame(pi->handle, 0, packet);
 }
 
-int decode_frame(struct PluginInstance* pi, CodedData* packet, Frame* frame)
+int decode_frame(struct PluginInstance* pi, CodedData* packet, ImageFrame* frame)
 {
-	MediaioPluginDecoder* decoder_api = (MediaioPluginDecoder*)pi->plugin->action_entry(kMediaioGetDecoderPlugin);
-	return decoder_api->decode(pi->handle, packet, frame);
+	MediaioPluginImageDecoder* decoder_api = (MediaioPluginImageDecoder*)pi->plugin->action_entry(kMediaioGetImageDecoderPlugin);
+	return decoder_api->decode_image(pi->handle, packet, frame);
 }
 
-int encode_frame(struct PluginInstance* pi, Frame* frame, CodedData* packet)
+int encode_frame(struct PluginInstance* pi, ImageFrame* frame, CodedData* packet)
 {
-	MediaioPluginEncoder* encoder_api = (MediaioPluginEncoder*)pi->plugin->action_entry(kMediaioGetEncoderPlugin);
-	return encoder_api->encode(pi->handle, frame, packet);
+	MediaioPluginImageEncoder* encoder_api = (MediaioPluginImageEncoder*)pi->plugin->action_entry(kMediaioGetImageEncoderPlugin);
+	return encoder_api->encode_image(pi->handle, frame, packet);
 }
 
 int main(int argc, char** argv)
@@ -130,9 +130,9 @@ int main(int argc, char** argv)
 		exit(-1);
 	if(get_plugin_instance("sequence", PluginApiWrapper, &pi_wrapper) != kMediaioStatusOK)
 		exit(-1);
-	if(get_plugin_instance("ffmpeg", PluginApiDecoder, &pi_decoder) != kMediaioStatusOK)
+	if(get_plugin_instance("ffmpeg", PluginApiImageDecoder, &pi_decoder) != kMediaioStatusOK)
 		exit(-1);
-	if(get_plugin_instance("tiff", PluginApiEncoder, &pi_encoder) != kMediaioStatusOK)
+	if(get_plugin_instance("tiff", PluginApiImageEncoder, &pi_encoder) != kMediaioStatusOK)
 		exit(-1);
 
 	// const char* in_filename = "/Users/marco/Movies/seq1/imf_app4_seq1.####.tiff";
@@ -161,12 +161,12 @@ int main(int argc, char** argv)
 			break;
 		}
 
-		Frame frame;
-		init_frame(&frame);
+		ImageFrame frame;
+		init_image_frame(&frame);
 		if(decode_frame(&pi_decoder, &src_packet, &frame) != kMediaioStatusOK)
 		{
 			delete_coded_data(&src_packet);
-			delete_frame(&frame);
+			delete_image_frame(&frame);
 			continue;
 		}
 		CodedData dst_packet;
@@ -179,7 +179,7 @@ int main(int argc, char** argv)
 		{
 			break;
 		}
-		delete_frame(&frame);
+		delete_image_frame(&frame);
 		delete_coded_data(&src_packet);
 		delete_coded_data(&dst_packet);
 		++count;

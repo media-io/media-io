@@ -1,13 +1,13 @@
 
-#include "frame.h"
+#include "image_frame.h"
 
-void init_frame(Frame* frame)
+void init_image_frame(ImageFrame* frame)
 {
 	frame->components = NULL;
 	frame->numberOfComponents = 0;
 }
 
-void create_components(Frame* frame, unsigned int required_components)
+void create_components(ImageFrame* frame, unsigned int required_components)
 {
 	if(frame->numberOfComponents == 0)
 	{
@@ -32,7 +32,7 @@ void create_components(Frame* frame, unsigned int required_components)
 	}
 }
 
-void delete_frame(Frame* frame)
+void delete_image_frame(ImageFrame* frame)
 {
 	if(frame->components)
 	{
@@ -42,6 +42,6 @@ void delete_frame(Frame* frame)
 			delete_component(&frame->components[index]);
 		}
 		free(frame->components);
-		init_frame(frame);
+		init_image_frame(frame);
 	}
 }

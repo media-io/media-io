@@ -33,7 +33,6 @@ typedef struct MediaioPropertySetStruct* MediaioPropertySetHandle;
 /** @brief Mediaio status return type */
 typedef int MediaioStatus;
 
-
 #define kMediaioStatusOK         ((int)0)
 #define kMediaioStatusFailed     ((int)1)
 #define kMediaioStatusErrorFatal ((int)2)

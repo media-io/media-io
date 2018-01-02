@@ -49,15 +49,18 @@ int main(int argc, char** argv)
 	printf("Plugins: total = %d\n", plugin_count);
 	printf("%s%-12s%-8s%-36s%-20s%s%s\n", kColorGreen, "API", "Version", "Identifier", "Label", "Description", kColorNone);
 
-	print_plugins(kMediaioReaderPluginApi,    "Reader",    kColorPink);
-	print_plugins(kMediaioWriterPluginApi,    "Writer",    kColorDark);
-	print_plugins(kMediaioGeneratorPluginApi, "Generator", kColorOrange);
-	print_plugins(kMediaioUnwrapperPluginApi, "Unwrapper", kColorViolet);
-	print_plugins(kMediaioWrapperPluginApi,   "Wrapper",   kColorRed);
-	print_plugins(kMediaioDecoderPluginApi,   "Decoder",   kColorYellow);
-	print_plugins(kMediaioEncoderPluginApi,   "Encoder",   kColorBlue);
-	print_plugins(kMediaioFilterPluginApi,    "Filter",    kColorCyan);
-	print_plugins(kMediaioAnalyserPluginApi,  "Analyser",  kColorPurple);
+	print_plugins(kMediaioReaderPluginApi,       "Reader",       kColorPink);
+	print_plugins(kMediaioWriterPluginApi,       "Writer",       kColorDark);
+	print_plugins(kMediaioGeneratorPluginApi,    "Generator",    kColorOrange);
+	print_plugins(kMediaioUnwrapperPluginApi,    "Unwrapper",    kColorViolet);
+	print_plugins(kMediaioWrapperPluginApi,      "Wrapper",      kColorRed);
+	print_plugins(kMediaioAudioDecoderPluginApi, "AudioDecoder", kColorYellow);
+	print_plugins(kMediaioAudioEncoderPluginApi, "AudioEncoder", kColorBlue);
+	print_plugins(kMediaioAudioFilterPluginApi,  "AudioFilter",  kColorCyan);
+	print_plugins(kMediaioImageDecoderPluginApi, "ImageDecoder", kColorYellow);
+	print_plugins(kMediaioImageEncoderPluginApi, "ImageEncoder", kColorBlue);
+	print_plugins(kMediaioImageFilterPluginApi,  "ImageFilter",  kColorCyan);
+	print_plugins(kMediaioAnalyserPluginApi,     "Analyser",     kColorPurple);
 
 	return 0;
 }

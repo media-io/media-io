@@ -5,24 +5,30 @@
 #include <mediaio/api/data/coded_data.h>
 #include <mediaio/api/metadata/metadata.h>
 #include <mediaio/api/reader/reader.h>
+#include <mediaio/api/descriptor/file.h>
+#include <mediaio/api/descriptor/stream.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef MediaioStatus (SetReaderEntryPoint) (void* handle, MediaioPluginReader* reader, void* readerHandle);
-typedef MediaioStatus (ConfigureEntryPoint) (void* handle, const Metadata* parameters);
-typedef MediaioStatus (UnwrapEntryPoint)    (void* handle, const int streamIndex, CodedData* unwrappedFrame);
-typedef MediaioStatus (SeekFrameEntryPoint) (void* handle, const int frame);
-typedef MediaioStatus (SeekTimeEntryPoint)  (void* handle, const double time);
+typedef MediaioStatus (SetReaderEntryPoint)        (void* handle, MediaioPluginReader* reader, void* readerHandle);
+typedef MediaioStatus (ConfigureEntryPoint)        (void* handle, const Metadata* parameters);
+typedef MediaioStatus (FileDescriptionEntryPoint)  (void* handle, struct MediaioFileDescriptor* descriptor);
+typedef MediaioStatus (StreamDescriptionEntryPoint)(void* handle, const int streamIndex, struct MediaioStreamDescriptor* descriptor);
+typedef MediaioStatus (UnwrapEntryPoint)           (void* handle, const int streamIndex, CodedData* unwrappedFrame);
+typedef MediaioStatus (SeekFrameEntryPoint)        (void* handle, const int frame);
+typedef MediaioStatus (SeekTimeEntryPoint)         (void* handle, const double time);
 
 typedef struct MediaioPluginUnwrapper
 {
-	SetReaderEntryPoint* set_reader;
-	ConfigureEntryPoint* configure;
-	UnwrapEntryPoint*    unwrap_next_frame;
-	SeekFrameEntryPoint* seek_at_frame;
-	SeekTimeEntryPoint*  seek_at_time;
+	SetReaderEntryPoint*         set_reader;
+	ConfigureEntryPoint*         configure;
+	FileDescriptionEntryPoint*   get_file_description;
+	StreamDescriptionEntryPoint* get_stream_description;
+	UnwrapEntryPoint*            unwrap_next_frame;
+	SeekFrameEntryPoint*         seek_at_frame;
+	SeekTimeEntryPoint*          seek_at_time;
 } MediaioPluginUnwrapper;
 
 #ifdef __cplusplus

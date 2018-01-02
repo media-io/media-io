@@ -1,6 +1,4 @@
 
-
-#include "FrameQueue.hpp"
 #include "Window.hpp"
 #include "tools.hpp"
 #include <iostream>
@@ -9,14 +7,19 @@
 #include <SDL2/SDL_thread.h>
 
 #define MEDIAIO_QUIT_EVENT (SDL_USEREVENT + 2)
-#define FRAME_QUEUE_SIZE 3
+#define QUEUE_SIZE 20
 #define REFRESH_RATE 0.01
 
 Reader* Window::_reader = NULL;
+std::vector<MioQueue<ImageFrame>> Window::_image_queues;
+std::vector<MioQueue<AudioFrame>> Window::_audio_queues;
+
 long int Window::_readFrameIndex = 0;
 long int Window::_displayFrameIndex = 0;
+bool Window::_audio_enabled = true;
 
 SDL_Thread* read_tid = NULL;
+bool terminate = false;
 
 static bool is_full_screen;
 static const char* window_title = "Media-IO Player";
@@ -32,28 +35,48 @@ static SDL_Window* window;
 static SDL_Renderer* renderer;
 static SDL_Texture* texture;
 
-static FrameQueue frame_queue(10);
+static SDL_Surface *surface;
+static Uint16 pixels[16*16] = {
+	0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2,
+	0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2,
+	0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2,
+	0xf9c2, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xf9c2,
+	0xf9c2, 0xfbd3, 0xfbd3, 0xfbd3, 0xf38b, 0xf38b, 0xf38b, 0xfbd3, 0xfbd3, 0xfbd3, 0xf38b, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xf9c2,
+	0xf9c2, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xf38b, 0xfbd3, 0xfbd3, 0xfbd3, 0xf38b, 0xfbd3, 0xf38b, 0xfbd3, 0xfbd3, 0xfbd3, 0xf9c2,
+	0xf9c2, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xf38b, 0xfbd3, 0xfbd3, 0xfbd3, 0xf38b, 0xfbd3, 0xf38b, 0xfbd3, 0xfbd3, 0xfbd3, 0xf9c2,
+	0xf9c2, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xf38b, 0xfbd3, 0xfbd3, 0xfbd3, 0xf38b, 0xfbd3, 0xf38b, 0xfbd3, 0xfbd3, 0xfbd3, 0xf9c2,
+	0xf9c2, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xf38b, 0xfbd3, 0xfbd3, 0xfbd3, 0xf38b, 0xfbd3, 0xf38b, 0xfbd3, 0xfbd3, 0xfbd3, 0xf9c2,
+	0xf9c2, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xf38b, 0xfbd3, 0xfbd3, 0xfbd3, 0xf38b, 0xfbd3, 0xf38b, 0xfbd3, 0xfbd3, 0xfbd3, 0xf9c2,
+	0xf9c2, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xf38b, 0xfbd3, 0xfbd3, 0xfbd3, 0xf38b, 0xfbd3, 0xf38b, 0xfbd3, 0xfbd3, 0xfbd3, 0xf9c2,
+	0xf9c2, 0xfbd3, 0xfbd3, 0xfbd3, 0xf38b, 0xf38b, 0xf38b, 0xfbd3, 0xfbd3, 0xfbd3, 0xf38b, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xf9c2,
+	0xf9c2, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xfbd3, 0xf9c2,
+	0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2,
+	0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2,
+	0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2, 0xf9c2
+};
 
-Window::Window(Reader& reader)
+Window::Window(Reader& reader, bool audio_enabled)
 {
 	_reader = &reader;
-	bool audio_enable = false;
-	int flags = SDL_INIT_VIDEO | SDL_INIT_TIMER;
 
-	if (audio_enable){
+	_audio_enabled = audio_enabled;
+
+	int flags = SDL_INIT_VIDEO | SDL_INIT_TIMER;
+	_image_queues.push_back(MioQueue<ImageFrame>(QUEUE_SIZE));
+	if (_audio_enabled){
 		flags |= SDL_INIT_AUDIO;
+		_audio_queues.push_back(MioQueue<AudioFrame>(QUEUE_SIZE));
+		_audio_queues.push_back(MioQueue<AudioFrame>(QUEUE_SIZE));
 	}
 	if(SDL_Init(flags)){
-		std::cout << "Could not initialize SDL - " << SDL_GetError() << std::endl;
+		std::cerr << "Could not initialize SDL - " << SDL_GetError() << std::endl;
 		return;
 	}
 
 	SDL_EventState(SDL_SYSWMEVENT, SDL_IGNORE);
 	SDL_EventState(SDL_USEREVENT, SDL_IGNORE);
 
-
 	read_tid = SDL_CreateThread(read_thread, "read_thread", NULL);
-
 
 	int w, h;
 
@@ -76,31 +99,87 @@ Window::Window(Reader& reader)
 		else
 			flags |= SDL_WINDOW_RESIZABLE;
 
-		window = SDL_CreateWindow(window_title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, w, h, flags);
+		window = SDL_CreateWindow(window_title, 0, 0, w, h, flags);
+		surface = SDL_CreateRGBSurfaceFrom(pixels, 16, 16, 16, 16 * 2, 0x0f00, 0x00f0, 0x000f, 0xf000);
+
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 		if(window) {
+			// The icon is attached to the window pointer
+			SDL_SetWindowIcon(window, surface);
+			SDL_FreeSurface(surface);
 			SDL_RendererInfo info;
 			renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 			if (!renderer) {
-				std::cout << "Failed to initialize a hardware accelerated renderer: " << SDL_GetError() << std::endl;
+				std::cerr << "Failed to initialize a hardware accelerated renderer: " << SDL_GetError() << std::endl;
 				renderer = SDL_CreateRenderer(window, -1, 0);
 			}
 			if (renderer) {
-				if (!SDL_GetRendererInfo(renderer, &info))
-					std::cout << "Initialized " << info.name << " renderer." << std::endl;
+				if (!SDL_GetRendererInfo(renderer, &info)){
+					// std::cout << "Initialized " << info.name << " renderer." << std::endl;
+				}
 			}
 		}
 	} else {
 		SDL_SetWindowSize(window, w, h);
 	}
+
+	SDL_AudioSpec wanted;
+
+	/* Set the audio format */
+	wanted.freq = 48000;
+	wanted.format = AUDIO_S32;
+	wanted.channels = 1;    /* 1 = mono, 2 = stereo */
+	wanted.samples = 1920;  /* Good low-latency value for callback */
+	wanted.callback = fill_audio;
+	wanted.userdata = NULL;
+
+	/* Open the audio device, forcing the desired format */
+	if(SDL_OpenAudio(&wanted, NULL) < 0) {
+		std::cerr << "Couldn't open audio: %s " << SDL_GetError() << std::endl;
+		return;
+	}
+	SDL_PauseAudio(0);
 }
 
 int Window::read_thread(void *arg) {
 	for(;;) {
-		Frame* frame = new Frame();
-		Window::_reader->readNextFrame(*frame);
+		for (int stream_index = 0; stream_index < 2; ++stream_index)
+		{
+			if(stream_index == 0)
+			{
+				ImageFrame* frame = new ImageFrame();
+				_reader->readNextImageFrame(*frame, stream_index);
+
+				_image_queues.at(stream_index).push(frame);
+
+				update_console_status();
+				while(_image_queues.at(stream_index).is_full())
+				{
+					mio_usleep((int64_t)(1000.0));
+					if(terminate)
+						return 0;
+				}
+			}
+			else
+			{
+				AudioFrame* frame = new AudioFrame();
+				_reader->readNextAudioFrame(*frame, stream_index);
+
+				_audio_queues.at(stream_index - 1).push(frame);
+
+				update_console_status();
+				while(_audio_queues.at(stream_index - 1).is_full())
+				{
+					mio_usleep((int64_t)(1000.0));
+					if(terminate)
+						return 0;
+				}
+			}
+		}
 		_readFrameIndex += 1;
-		frame_queue.push(frame);
+
+		if(terminate)
+			return 0;
 	}
 }
 
@@ -116,14 +195,14 @@ static int realloc_texture(Uint32 new_format, SDL_BlendMode blendmode, int new_w
 			return -1;
 		
 		SDL_SetWindowSize(window, new_width, new_height);
-		std::cout << "Created " << new_width << "x" << new_height << " texture with " << SDL_GetPixelFormatName(new_format) << "." << std::endl;
+		// std::cout << "Created " << new_width << "x" << new_height << " texture with " << SDL_GetPixelFormatName(new_format) << "." << std::endl;
 	}
 	return 0;
 }
 
 void Window::video_refresh()
 {
-	Frame* frame = frame_queue.pop();
+	ImageFrame* frame = _image_queues.at(0).pop();
 
 	if(frame != nullptr){
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -145,7 +224,8 @@ void Window::video_refresh()
 		rect.h = frame->components[0].height;
 		SDL_RenderCopy(renderer, texture, NULL, &rect);
 		_displayFrameIndex += 1;
-		std::cout << "\rread frame index: " << _readFrameIndex << " display frame index : " << _displayFrameIndex << std::flush;
+
+		update_console_status();
 		delete frame;
 
 		SDL_RenderPresent(renderer);
@@ -154,10 +234,16 @@ void Window::video_refresh()
 
 static void do_exit()
 {
+	terminate = true;
 	if (renderer)
 		SDL_DestroyRenderer(renderer);
 	if (window)
 		SDL_DestroyWindow(window);
+
+	SDL_CloseAudio();
+	int threadReturnValue;
+	SDL_WaitThread(read_tid, &threadReturnValue);
+
 	SDL_Quit();
 	exit(0);
 }
@@ -169,20 +255,51 @@ static void toggle_full_screen()
 }
 
 void Window::refresh_loop_wait_event(SDL_Event *event) {
-	double remaining_time = 0.0;
+	clock_t previous_frame_time;
 	SDL_PumpEvents();
 	while (!SDL_PeepEvents(event, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT)) {
-		if (remaining_time > 0.0)
+
+		clock_t current_diff = clock() - previous_frame_time;
+		double remaining_time = (((float)current_diff)/CLOCKS_PER_SEC) - (1.f / 25.f);
+		if (remaining_time > 0)
 			mio_usleep((int64_t)(remaining_time * 1000000.0));
-		remaining_time = REFRESH_RATE;
+
 		if (!paused || force_refresh){
+			previous_frame_time = clock();
 			video_refresh();
 			force_refresh = false;
-			remaining_time = 1.0/30.0;
+			// remaining_time = 1.0 / 30.0;
 		}
-
 		SDL_PumpEvents();
 	}
+}
+
+void Window::fill_audio(void *udata, Uint8 *stream, int len)
+{
+	if(paused)
+	{
+		memset(stream, 0, len);
+		return;
+	}
+	AudioFrame* frame = _audio_queues.at(0).pop();
+	if(frame != nullptr)
+	{
+		auto channel = frame->channels[0];
+		memcpy(stream, channel.data, len);
+	}
+}
+
+void Window::update_console_status()
+{
+	size_t size = _image_queues.at(0).get_size();
+	size_t fill = _image_queues.at(0).get_fill_size();
+	int ratio = 10.0 * fill / size;
+	std::string x;
+	for(int i = 0; i < ratio; ++i)
+		x.insert(0, "\u2588");
+	std::string clean(10-ratio, ' ');
+
+	std::cout << "\r[" << x << clean << "] frame: " << _displayFrameIndex << "     " << std::flush;
 }
 
 void Window::launch()
@@ -192,47 +309,48 @@ void Window::launch()
 	for (;;) {
 		refresh_loop_wait_event(&event);
 		switch (event.type) {
-		case SDL_KEYDOWN:
-			switch (event.key.keysym.sym) {
-				case SDLK_ESCAPE:
-				case SDLK_q:
-					do_exit();
-					break;
-				case SDLK_f:
-					toggle_full_screen();
-					force_refresh = true;
-					break;
-				case SDLK_p:
-				case SDLK_SPACE:
-					paused = !paused;
-					break;
-				case SDLK_s: // S: Step to next frame
-					// step_to_next_frame(cur_stream);
-					break;
-				default:
-					break;
+			case SDL_KEYDOWN:
+				switch (event.key.keysym.sym) {
+					case SDLK_ESCAPE:
+					case SDLK_q:
+						do_exit();
+						break;
+					case SDLK_f:
+						toggle_full_screen();
+						force_refresh = true;
+						break;
+					case SDLK_p:
+					case SDLK_SPACE:
+						paused = !paused;
+						break;
+					case SDLK_s: // S: Step to next frame
+						// step_to_next_frame(cur_stream);
+						break;
+					default:
+						break;
+				}
+				break;
+			case SDL_WINDOWEVENT:
+				switch (event.window.event) {
+					case SDL_WINDOWEVENT_RESIZED:
+						// std::cout << "resize window " << event.window.data1 << " x " <<  event.window.data2 << std::endl;
+						screen_width  = event.window.data1;
+						screen_height = event.window.data2;
+						if (texture) {
+							SDL_DestroyTexture(texture);
+							texture = NULL;
+						}
+					case SDL_WINDOWEVENT_EXPOSED:
+						force_refresh = true;
+				}
+				break;
+			case SDL_QUIT:
+			case MEDIAIO_QUIT_EVENT: {
+				do_exit();
+				break;
 			}
-			break;
-		case SDL_WINDOWEVENT:
-			switch (event.window.event) {
-				case SDL_WINDOWEVENT_RESIZED:
-					// std::cout << "resize window " << event.window.data1 << " x " <<  event.window.data2 << std::endl;
-					screen_width  = event.window.data1;
-					screen_height = event.window.data2;
-					if (texture) {
-						SDL_DestroyTexture(texture);
-						texture = NULL;
-					}
-				case SDL_WINDOWEVENT_EXPOSED:
-					force_refresh = true;
-			}
-			break;
-		case SDL_QUIT:
-		case MEDIAIO_QUIT_EVENT:
-			do_exit();
-			break;
-		default:
-			break;
+			default:
+				break;
 		}
 	}
 }

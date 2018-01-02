@@ -19,9 +19,7 @@ int main(int argc, char** argv)
 		CommandLineParser parser;
 		parser.parse( argc, argv );
 
-		if( parser.getReaders().size() == 0 ||
-			parser.getUnwrappers().size() == 0 ||
-			parser.getDecoders().size() == 0 ||
+		if(
 			parser.getInputFilenames().size() == 0
 		)
 		{
@@ -31,18 +29,28 @@ int main(int argc, char** argv)
 		Reader reader;
 		Plugins plugins;
 
+		std::string reader_plugin = parser.getReaders().size() ? parser.getReaders().at(0) : "";
+		std::string unwrapper_plugin = parser.getUnwrappers().size() ? parser.getUnwrappers().at(0) : "";
+		std::string decoder_plugin = parser.getDecoders().size() ? parser.getDecoders().at(0) : "";
+
 		reader.configure(
 			plugins,
-			parser.getReaders().at(0),
-			parser.getUnwrappers().at(0),
-			parser.getDecoders().at(0),
+			reader_plugin,
+			unwrapper_plugin,
+			decoder_plugin,
 			parser.getFilters(),
 			parser.getInputFilenames().at(0)
 		);
 
 		// reader.setReaderParameters(parser.getReaderParameters(0));
-		reader.setUnwrapperParameters(parser.getUnwrapperParameters(0));
-		reader.setDecoderParameters(parser.getDecoderParameters(0));
+		if(unwrapper_plugin != "")
+		{
+			reader.setUnwrapperParameters(parser.getUnwrapperParameters(0));
+		}
+		if(decoder_plugin != "")
+		{
+			reader.setDecoderParameters(parser.getDecoderParameters(0));
+		}
 
 		for(size_t index = 0; index < parser.getFilters().size(); ++index)
 		{

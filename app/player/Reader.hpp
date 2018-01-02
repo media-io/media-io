@@ -2,7 +2,8 @@
 #define _MEDIAIO_READER_READER_HPP_
 
 #include <mediaio/api/instance/instance.h>
-#include <mediaio/api/data/frame.h>
+#include <mediaio/api/data/audio_frame.h>
+#include <mediaio/api/data/image_frame.h>
 #include <mediaio/host/Plugins.hpp>
 #include <string>
 #include <vector>
@@ -10,8 +11,10 @@
 
 struct MediaioPluginReader;
 struct MediaioPluginUnwrapper;
-struct MediaioPluginDecoder;
-struct MediaioPluginFilter;
+struct MediaioPluginAudioDecoder;
+struct MediaioPluginImageDecoder;
+struct MediaioPluginAudioFilter;
+struct MediaioPluginImageFilter;
 
 class Reader
 {
@@ -37,25 +40,36 @@ public:
 
 	void preload();
 
-	void readNextFrame(Frame& decodedFrame);
+	void readNextImageFrame(ImageFrame& frame, size_t streamIndex);
+	void readNextAudioFrame(AudioFrame& frame, size_t streamIndex);
 
 	void seekAtFrame(long int frameIndex);
 
 private:
-	MediaioPluginInstance*              _readerInstance;
-	MediaioPluginInstance*              _unwrapperInstance;
-	MediaioPluginInstance*              _decoderInstance;
-	MediaioPluginReader*                _reader;
-	MediaioPluginUnwrapper*             _unwrapper;
-	MediaioPluginDecoder*               _decoder;
-	std::vector<MediaioPluginFilter*>   _filters;
-	std::vector<MediaioPluginInstance*> _filtersInstance;
-	void*                               _readerHandle;
-	void*                               _unwrapperHandle;
-	void*                               _decoderHandle;
-	std::vector<void*>                  _filtersHandle;
+	MediaioPluginInstance*                 _readerInstance;
+	MediaioPluginInstance*                 _unwrapperInstance;
+	MediaioPluginInstance*                 _imageDecoderInstance;
+	MediaioPluginInstance*                 _audioDecoderInstance;
+	MediaioPluginReader*                   _reader;
+	MediaioPluginUnwrapper*                _unwrapper;
+	MediaioPluginImageDecoder*             _imageDecoder;
+	MediaioPluginAudioDecoder*             _audioDecoder;
 
-	bool                                _enableDecoding;
+	std::vector<MediaioPluginImageFilter*> _videoFilters;
+	std::vector<MediaioPluginInstance*>    _videoFiltersInstance;
+
+	std::vector<MediaioPluginAudioFilter*> _audioFilters;
+	std::vector<MediaioPluginInstance*>    _audioFiltersInstance;
+
+	void*                                  _readerHandle;
+	void*                                  _unwrapperHandle;
+	void*                                  _imageDecoderHandle;
+	void*                                  _audioDecoderHandle;
+
+	std::vector<void*>                     _videoFiltersHandle;
+	std::vector<void*>                     _audioFiltersHandle;
+
+	bool                                   _enableDecoding;
 };
 
 #endif

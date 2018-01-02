@@ -6,19 +6,26 @@
 #include <mediaio/api/decoder/decoder.h>
 #include <mediaio/api/filter/filter.h>
 
+#include <mediaio/api/descriptor/file.h>
+#include <mediaio/api/descriptor/stream.h>
+
 #include <iostream>
+#include <cstring>
 
 Reader::Reader()
-	: _readerInstance    (nullptr)
-	, _unwrapperInstance (nullptr)
-	, _decoderInstance   (nullptr)
-	, _reader            (nullptr)
-	, _unwrapper         (nullptr)
-	, _decoder           (nullptr)
-	, _readerHandle      (nullptr)
-	, _unwrapperHandle   (nullptr)
-	, _decoderHandle     (nullptr)
-	, _enableDecoding    (true)
+	: _readerInstance       (nullptr)
+	, _unwrapperInstance    (nullptr)
+	, _imageDecoderInstance (nullptr)
+	, _audioDecoderInstance (nullptr)
+	, _reader               (nullptr)
+	, _unwrapper            (nullptr)
+	, _imageDecoder         (nullptr)
+	, _audioDecoder         (nullptr)
+	, _readerHandle         (nullptr)
+	, _unwrapperHandle      (nullptr)
+	, _imageDecoderHandle   (nullptr)
+	, _audioDecoderHandle   (nullptr)
+	, _enableDecoding       (true)
 {
 }
 
@@ -27,8 +34,11 @@ Reader::~Reader()
 	if( _unwrapperInstance )
 		_unwrapperInstance->delete_instance(&_unwrapperHandle);
 
-	if( _decoderInstance )
-		_decoderInstance->delete_instance(&_decoderHandle);
+	if( _imageDecoderInstance )
+		_imageDecoderInstance->delete_instance(&_imageDecoderHandle);
+
+	if( _audioDecoderInstance )
+		_audioDecoderInstance->delete_instance(&_audioDecoderHandle);
 
 	if( _readerInstance )
 		_readerInstance->delete_instance(&_readerHandle);
@@ -39,70 +49,149 @@ void Reader::configure(
 	Plugins& plugins,
 	const std::string& readerIdentifier,
 	const std::string& unwrapperIdentifier,
-	const std::string& decoderIdentifier,
+	const std::string& imageDecoderIdentifier,
 	const std::vector<std::string>& filtersIdentifier,
-	const std::string& filename )
+	const std::string& filename
+	)
 {
-	MediaioPlugin& readerPlugin = plugins.searchPlugin(readerIdentifier, kMediaioReaderPluginApi);
+	std::string reader_identifier = readerIdentifier;
+	if(readerIdentifier == "")
+	{
+		if(strncmp(filename.c_str(), "http://" , 7) == 0
+			|| strncmp(filename.c_str(), "https://" , 8) == 0)
+		{
+			reader_identifier = "httpreader";
+		}
+		else
+		{
+			reader_identifier = "filesystemreader";
+		}
+	}
+	MediaioPlugin& readerPlugin = plugins.searchPlugin(reader_identifier, kMediaioReaderPluginApi);
 	_readerInstance = (MediaioPluginInstance*)readerPlugin.action_entry(kMediaioGetInstancePlugin);
 	_reader = (MediaioPluginReader*)readerPlugin.action_entry(kMediaioGetReaderPlugin);
 	
-	MediaioPlugin& unwrapperPlugin = plugins.searchPlugin(unwrapperIdentifier, kMediaioUnwrapperPluginApi);
-	_unwrapperInstance = (MediaioPluginInstance*)unwrapperPlugin.action_entry(kMediaioGetInstancePlugin);
-	_unwrapper = (MediaioPluginUnwrapper*)unwrapperPlugin.action_entry(kMediaioGetUnwrapperPlugin);
-	
-	MediaioPlugin& decoderPlugin = plugins.searchPlugin(decoderIdentifier, kMediaioDecoderPluginApi);
-	_decoderInstance = (MediaioPluginInstance*)decoderPlugin.action_entry(kMediaioGetInstancePlugin);
-	_decoder = (MediaioPluginDecoder*)decoderPlugin.action_entry(kMediaioGetDecoderPlugin);
-
-	// std::cout << "Unwrapper : " << unwrapperPlugin.plugin_identifier << " v" << unwrapperPlugin.plugin_version_major << "." << unwrapperPlugin.plugin_version_minor << std::endl;
-	// std::cout << "Decoder   : " << decoderPlugin.plugin_identifier << " v" << decoderPlugin.plugin_version_major << "." << decoderPlugin.plugin_version_minor << std::endl;
-
-	for(auto filterIdentifier : filtersIdentifier)
-	{
-		MediaioPlugin& filterPlugin = plugins.searchPlugin(filterIdentifier, kMediaioFilterPluginApi);
-		_filters.push_back((MediaioPluginFilter*) filterPlugin.action_entry(kMediaioGetFilterPlugin));
-		_filtersInstance.push_back((MediaioPluginInstance*) filterPlugin.action_entry(kMediaioGetInstancePlugin));
-		// std::cout << "Filter    : " << filterPlugin.plugin_identifier << " v" << filterPlugin.plugin_version_major << "." << filterPlugin.plugin_version_minor << std::endl;
-	}
-
 	MediaioStatus ret;
 	ret = _readerInstance->create_instance(&_readerHandle);
 	if(ret == kMediaioStatusFailed)
 	{
-		throw std::runtime_error("unable to create instance of plugin " + readerIdentifier);
+		throw std::runtime_error("unable to create instance of plugin " + reader_identifier);
 	}
+	_reader->set_filename(_readerHandle, filename.c_str());
+
+	std::string unwrapper_identifier = unwrapperIdentifier;
+	if(unwrapperIdentifier == "")
+	{
+		std::string sub_name = filename;
+		std::cout << sub_name << std::endl;
+		if(strcmp(sub_name.substr(sub_name.size() - 4, 4).c_str(), ".mxf") == 0)
+		{
+			unwrapper_identifier = "mxfunwrapper";
+		}
+		if(strcmp(sub_name.substr(sub_name.size() - 4, 4).c_str(), ".mov") == 0)
+		{
+			unwrapper_identifier = "ffmpegunwrapper";
+		}
+		if(strcmp(sub_name.substr(sub_name.size() -5, 5).c_str(), ".tiff") == 0)
+		{
+			unwrapper_identifier = "sequenceunwrapper";
+		}
+	}
+	if(unwrapperIdentifier == "")
+	{
+		unwrapper_identifier = "mxfunwrapper";
+	}
+
+	MediaioPlugin& unwrapperPlugin = plugins.searchPlugin(unwrapper_identifier, kMediaioUnwrapperPluginApi);
+	_unwrapperInstance = (MediaioPluginInstance*)unwrapperPlugin.action_entry(kMediaioGetInstancePlugin);
+	_unwrapper = (MediaioPluginUnwrapper*)unwrapperPlugin.action_entry(kMediaioGetUnwrapperPlugin);
+
 	ret = _unwrapperInstance->create_instance(&_unwrapperHandle);
 	if(ret == kMediaioStatusFailed)
 	{
-		throw std::runtime_error("unable to create instance of plugin " + unwrapperIdentifier);
-	}
-	ret = _decoderInstance->create_instance(&_decoderHandle);
-	if(ret == kMediaioStatusFailed)
-	{
-		throw std::runtime_error("unable to create instance of plugin " + decoderIdentifier);
+		throw std::runtime_error("unable to create instance of plugin " + unwrapper_identifier);
 	}
 
-	_filtersHandle.resize(_filters.size());
-	size_t index = 0;
-	for(auto filter : _filtersInstance)
+	_unwrapper->set_reader(_unwrapperHandle, _reader, _readerHandle);
+
+	std::string image_decoder_identifier = imageDecoderIdentifier;
+	std::string audio_decoder_identifier = "";
+	if(imageDecoderIdentifier == "")
 	{
-		ret = filter->create_instance(&_filtersHandle.at(index++));
+		MediaioFileDescriptor descriptor;
+		_unwrapper->get_file_description(_unwrapperHandle, &descriptor);
+		for (int i = 0; i < descriptor.number_of_streams; ++i)
+		{
+			MediaioStreamDescriptor stream_descriptor;
+			_unwrapper->get_stream_description(_unwrapperHandle, i, &stream_descriptor);
+			
+			if(stream_descriptor.codec == MediaioStreamCodecMpeg2)
+			{
+				image_decoder_identifier = "ffmpegdecoder";
+			}
+			if(stream_descriptor.codec == MediaioStreamCodecJpeg2000)
+			{
+				image_decoder_identifier = "openjpegdecoder";
+			}
+			if(stream_descriptor.codec == MediaioStreamCodecPCM)
+			{
+				audio_decoder_identifier = "pcmdecoder";
+			}
+			// std::cout << get_stream_kind_letter(stream_descriptor.kind) << " ";
+			// std::cout << "codec: " << get_codec_str(stream_descriptor.codec) << std::endl;
+
+			// if(stream_descriptor.image != NULL)
+			// {
+			// 	std::cout << "width: "  << stream_descriptor.image->width << std::endl;
+			// 	std::cout << "height: " << stream_descriptor.image->height << std::endl;
+			// }
+			// if(stream_descriptor.audio != NULL)
+			// {
+			// 	std::cout << "channel_count: "      << stream_descriptor.audio->channel_count << std::endl;
+			// 	std::cout << "sample_rate: "        << stream_descriptor.audio->sample_rate_num << "/" << stream_descriptor.audio->sample_rate_den << std::endl;
+			// 	std::cout << "container_duration: " << stream_descriptor.audio->container_duration << std::endl;
+			// 	std::cout << "quantization_bits: "  << stream_descriptor.audio->quantization_bits << std::endl;
+			// }
+		}
+	}
+
+	MediaioPlugin& imageDecoderPlugin = plugins.searchPlugin(image_decoder_identifier, kMediaioImageDecoderPluginApi);
+	_imageDecoderInstance = (MediaioPluginInstance*)imageDecoderPlugin.action_entry(kMediaioGetInstancePlugin);
+	_imageDecoder = (MediaioPluginImageDecoder*)imageDecoderPlugin.action_entry(kMediaioGetImageDecoderPlugin);
+	
+	ret = _imageDecoderInstance->create_instance(&_imageDecoderHandle);
+	if(ret == kMediaioStatusFailed)
+	{
+		throw std::runtime_error("unable to create instance of plugin " + image_decoder_identifier);
+	}
+	
+	MediaioPlugin& audioDecoderPlugin = plugins.searchPlugin(audio_decoder_identifier, kMediaioAudioDecoderPluginApi);
+	_audioDecoderInstance = (MediaioPluginInstance*)audioDecoderPlugin.action_entry(kMediaioGetInstancePlugin);
+	_audioDecoder = (MediaioPluginAudioDecoder*)audioDecoderPlugin.action_entry(kMediaioGetAudioDecoderPlugin);
+
+	ret = _audioDecoderInstance->create_instance(&_audioDecoderHandle);
+	if(ret == kMediaioStatusFailed)
+	{
+		throw std::runtime_error("unable to create instance of plugin " + audio_decoder_identifier);
+	}
+
+	for(auto filterIdentifier : filtersIdentifier)
+	{
+		MediaioPlugin& filterPlugin = plugins.searchPlugin(filterIdentifier, kMediaioImageFilterPluginApi);
+		_videoFilters.push_back((MediaioPluginImageFilter*) filterPlugin.action_entry(kMediaioGetImageFilterPlugin));
+		_videoFiltersInstance.push_back((MediaioPluginInstance*) filterPlugin.action_entry(kMediaioGetInstancePlugin));
+	}
+
+	_videoFiltersHandle.resize(_videoFilters.size());
+	size_t index = 0;
+	for(auto filter : _videoFiltersInstance)
+	{
+		ret = filter->create_instance(&_videoFiltersHandle.at(index++));
 		if( ret == kMediaioStatusFailed )
 		{
 			throw std::runtime_error("unable to create instance of filter plugin ");
 		}
 	}
-
-	_reader->set_filename(_readerHandle, filename.c_str());
-
-	_unwrapper->set_reader(_unwrapperHandle, _reader, _readerHandle);
-
-	// ret = _unwrapper->open( _unwrapperHandle, filename.c_str() );
-	// if( ret != kMediaioStatusOK || ! _unwrapperHandle )
-	// {
-	// 	throw std::runtime_error( "unable to open file: " + filename );
-	// }
 }
 
 void Reader::setUnwrapperParameters(const std::map< std::string, std::string>& parameters)
@@ -142,12 +231,12 @@ void Reader::setDecoderParameters(const std::map< std::string, std::string>& par
 	m.type = eMetadataTypeEnd;
 	params.push_back(m);
 
-	_decoder->configure(_decoderHandle, &params[0]);
+	_imageDecoder->configure(_imageDecoderHandle, &params[0]);
 }
 
 void Reader::setFilterParameters(size_t index, const std::map< std::string, std::string>& parameters)
 {
-	if(index >= _filters.size())
+	if(index >= _videoFilters.size())
 	{
 		return;
 	}
@@ -167,7 +256,7 @@ void Reader::setFilterParameters(size_t index, const std::map< std::string, std:
 	m.type = eMetadataTypeEnd;
 	params.push_back(m);
 
-	_filters.at(index)->configure(_filtersHandle.at(index), &params[0]);
+	_videoFilters.at(index)->configure(_videoFiltersHandle.at(index), &params[0]);
 }
 
 void Reader::disableDecoding(const bool enableDecoding)
@@ -180,17 +269,14 @@ void Reader::preload()
 
 }
 
-void Reader::readNextFrame(Frame& decodedFrame)
+void Reader::readNextImageFrame(ImageFrame& decodedFrame, size_t streamIndex)
 {
-	size_t streamIndex = 0;
-
 	while(1)
 	{
 		CodedData codedFrame;
 		init_coded_data(&codedFrame);
-		MediaioStatus ret;
 
-		// clock_t startTime = clock();
+		MediaioStatus ret;
 
 		ret = _unwrapper->unwrap_next_frame(_unwrapperHandle, streamIndex, &codedFrame);
 
@@ -200,47 +286,72 @@ void Reader::readNextFrame(Frame& decodedFrame)
 			throw std::runtime_error( "unable to unwrap a new packet" );
 		}
 
-		// clock_t unwrapTime = clock();
-		// std::cout << "codeddata size = " << codedFrame.size << std::endl;
+		init_image_frame(&decodedFrame);
+		ImageFrame extractedFrame;
+		init_image_frame(&extractedFrame);
 
-		init_frame(&decodedFrame);
-		Frame extractedFrame;
-		init_frame(&extractedFrame);
-		
-		ret = _decoder->decode(_decoderHandle, &codedFrame, (_filters.size() == 0) ? &decodedFrame : &extractedFrame);
+		ret = _imageDecoder->decode_image(_imageDecoderHandle, &codedFrame, (_videoFilters.size() == 0) ? &decodedFrame : &extractedFrame);
 		if(ret == kMediaioStatusFailed)
 		{
 			delete_coded_data(&codedFrame);
 			continue;
-			// throw std::runtime_error("unable to decode frame");
 		}
 
-		Metadata* metadata = _decoder->get_metadatas(_decoderHandle);
+		// Metadata* metadata = _imageDecoder->get_metadatas(_imageDecoderHandle);
+		// printMetadata(metadata);
 
-		for(size_t index = 0; index < _filters.size(); ++ index)
+		for(size_t index = 0; index < _videoFilters.size(); ++ index)
 		{
-			// if(index == _filters.size() -1){
-				
-			// }
-			_filters.at(index)->process(_filtersHandle.at(index), &extractedFrame, &decodedFrame);
+			_videoFilters.at(index)->process_image(_videoFiltersHandle.at(index), &extractedFrame, &decodedFrame);
 		}
-
-		printMetadata(metadata);
-
-		// clock_t decodedTime = clock();
-
-		// std::cout << "unwrapping = " << ( ((float)unwrapTime - startTime ) / CLOCKS_PER_SEC );
-		// std::cout << " decoding = " << ( ((float) decodedTime - unwrapTime ) / CLOCKS_PER_SEC );
-		// std::cout << " total = " << ( ((float) decodedTime - startTime ) / CLOCKS_PER_SEC ) << std::endl;
 
 		delete_coded_data(&codedFrame);
-		delete_frame(&extractedFrame);
+		delete_image_frame(&extractedFrame);
 		return;
 	}
 }
 
-
-void Reader::seekAtFrame( long int frameIndex )
+void Reader::readNextAudioFrame(AudioFrame& decodedFrame, size_t streamIndex)
 {
-	_unwrapper->seek_at_frame( _unwrapperHandle, frameIndex );
+	while(1)
+	{
+		CodedData codedFrame;
+		init_coded_data(&codedFrame);
+
+		MediaioStatus ret;
+
+		ret = _unwrapper->unwrap_next_frame(_unwrapperHandle, streamIndex, &codedFrame);
+		if(ret == kMediaioStatusFailed)
+		{
+			delete_coded_data(&codedFrame);
+			throw std::runtime_error( "unable to unwrap a new packet" );
+		}
+
+		init_audio_frame(&decodedFrame);
+		AudioFrame extractedFrame;
+		init_audio_frame(&extractedFrame);
+
+		ret = _audioDecoder->decode_audio(_audioDecoderHandle, &codedFrame, (_audioFilters.size() == 0) ? &decodedFrame : &extractedFrame);
+
+		if(ret == kMediaioStatusFailed)
+		{
+			delete_coded_data(&codedFrame);
+			continue;
+		}
+
+		for(size_t index = 0; index < _audioFilters.size(); ++ index)
+		{
+			_audioFilters.at(index)->process_audio(_audioFiltersHandle.at(index), &extractedFrame, &decodedFrame);
+		}
+
+		delete_audio_frame(&extractedFrame);
+
+		delete_coded_data(&codedFrame);
+		return;
+	}
+}
+
+void Reader::seekAtFrame(long int frameIndex)
+{
+	_unwrapper->seek_at_frame(_unwrapperHandle, frameIndex);
 }

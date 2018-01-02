@@ -3,18 +3,27 @@
 
 #include <mediaio/api/common/plugin.h>
 #include <mediaio/api/data/coded_data.h>
-#include <mediaio/api/data/frame.h>
+#include <mediaio/api/data/audio_frame.h>
+#include <mediaio/api/data/image_frame.h>
 #include <mediaio/api/metadata/metadata.h>
 
 typedef MediaioStatus (ConfigureEntryPoint)    (void* handle, const Metadata* parameters);
-typedef MediaioStatus (DecodeEntryPoint)       (void* handle, CodedData* unwrappedFrame, Frame* decodedFrame);
+typedef MediaioStatus (DecodeImageEntryPoint)  (void* handle, CodedData* data, ImageFrame* frame);
+typedef MediaioStatus (DecodeAudioEntryPoint)  (void* handle, CodedData* data, AudioFrame* frame);
 typedef Metadata*     (GetMetadatasEntryPoint) (void* handle);
 
-typedef struct MediaioPluginDecoder
+typedef struct MediaioPluginImageDecoder
 {
 	ConfigureEntryPoint*    configure;
-	DecodeEntryPoint*       decode;
+	DecodeImageEntryPoint*  decode_image;
 	GetMetadatasEntryPoint* get_metadatas;
-} MediaioPluginDecoder;
+} MediaioPluginImageDecoder;
+
+typedef struct MediaioPluginAudioDecoder
+{
+	ConfigureEntryPoint*    configure;
+	DecodeAudioEntryPoint*  decode_audio;
+	GetMetadatasEntryPoint* get_metadatas;
+} MediaioPluginAudioDecoder;
 
 #endif

@@ -46,6 +46,7 @@ env.Alias('install', env.InstallVersionedLib('$PREFIX/usr/lib', hostCLib))
 paths = [
 	'mediaio/api/common',
 	'mediaio/api/data',
+	'mediaio/api/descriptor',
 	'mediaio/api/instance',
 	'mediaio/api/metadata',
 	'mediaio/api/reader',

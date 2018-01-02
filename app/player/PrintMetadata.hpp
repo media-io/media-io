@@ -1,5 +1,5 @@
-#ifndef _MEDIAIO_READER_PRINT_METADATA_HPP_
-#define _MEDIAIO_READER_PRINT_METADATA_HPP_
+#ifndef _MEDIAIO_PLAYER_PRINT_METADATA_HPP_
+#define _MEDIAIO_PLAYER_PRINT_METADATA_HPP_
 
 #include <mediaio/api/metadata/metadata.h>
 #include <iostream>
