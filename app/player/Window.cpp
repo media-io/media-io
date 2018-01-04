@@ -2,12 +2,16 @@
 #include "Window.hpp"
 #include "tools.hpp"
 #include <iostream>
+#include <cstdlib>
+#include <sstream>
+#include <iomanip>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_thread.h>
+#include <SDL2/SDL_ttf.h>
 
 #define MEDIAIO_QUIT_EVENT (SDL_USEREVENT + 2)
-#define QUEUE_SIZE 20
+#define QUEUE_SIZE 50
 #define REFRESH_RATE 0.01
 
 Reader* Window::_reader = NULL;
@@ -17,6 +21,8 @@ std::vector<MioQueue<AudioFrame>> Window::_audio_queues;
 long int Window::_readFrameIndex = 0;
 long int Window::_displayFrameIndex = 0;
 bool Window::_audio_enabled = true;
+bool Window::_info_displayed = false;
+TTF_Font* Window::_font = NULL;
 
 SDL_Thread* read_tid = NULL;
 bool terminate = false;
@@ -59,14 +65,17 @@ Window::Window(Reader& reader, bool audio_enabled)
 {
 	_reader = &reader;
 
+	TTF_Init();
+	_font = TTF_OpenFont("/Library/Fonts/Arial.ttf", 30);
+
 	_audio_enabled = audio_enabled;
 
 	int flags = SDL_INIT_VIDEO | SDL_INIT_TIMER;
 	_image_queues.push_back(MioQueue<ImageFrame>(QUEUE_SIZE));
 	if (_audio_enabled){
 		flags |= SDL_INIT_AUDIO;
-		_audio_queues.push_back(MioQueue<AudioFrame>(QUEUE_SIZE));
-		_audio_queues.push_back(MioQueue<AudioFrame>(QUEUE_SIZE));
+		_audio_queues.push_back(MioQueue<AudioFrame>(QUEUE_SIZE * 100));
+		_audio_queues.push_back(MioQueue<AudioFrame>(QUEUE_SIZE * 100));
 	}
 	if(SDL_Init(flags)){
 		std::cerr << "Could not initialize SDL - " << SDL_GetError() << std::endl;
@@ -80,7 +89,7 @@ Window::Window(Reader& reader, bool audio_enabled)
 
 	int w, h;
 
-	if (screen_width) {
+	if(screen_width == 0) {
 		w = screen_width;
 		h = screen_height;
 	} else {
@@ -150,10 +159,10 @@ int Window::read_thread(void *arg) {
 				ImageFrame* frame = new ImageFrame();
 				_reader->readNextImageFrame(*frame, stream_index);
 
-				_image_queues.at(stream_index).push(frame);
+				_image_queues.at(0).push(frame);
 
-				update_console_status();
-				while(_image_queues.at(stream_index).is_full())
+				// update_console_status();
+				while(_image_queues.at(0).is_full())
 				{
 					mio_usleep((int64_t)(1000.0));
 					if(terminate)
@@ -167,7 +176,7 @@ int Window::read_thread(void *arg) {
 
 				_audio_queues.at(stream_index - 1).push(frame);
 
-				update_console_status();
+				// update_console_status();
 				while(_audio_queues.at(stream_index - 1).is_full())
 				{
 					mio_usleep((int64_t)(1000.0));
@@ -193,7 +202,7 @@ static int realloc_texture(Uint32 new_format, SDL_BlendMode blendmode, int new_w
 			return -1;
 		if (SDL_SetTextureBlendMode(texture, blendmode) < 0)
 			return -1;
-		
+
 		SDL_SetWindowSize(window, new_width, new_height);
 		// std::cout << "Created " << new_width << "x" << new_height << " texture with " << SDL_GetPixelFormatName(new_format) << "." << std::endl;
 	}
@@ -206,11 +215,15 @@ void Window::video_refresh()
 
 	if(frame != nullptr){
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+		SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 		SDL_RenderClear(renderer);
 		Uint32 sdl_pix_fmt = SDL_PIXELFORMAT_IYUV;
 		SDL_BlendMode sdl_blendmode = SDL_BLENDMODE_NONE;
 
-		realloc_texture(sdl_pix_fmt, sdl_blendmode, frame->components[0].width, frame->components[0].height);
+		size_t width = frame->components[0].width;
+		size_t height = frame->components[0].height;
+
+		realloc_texture(sdl_pix_fmt, sdl_blendmode, width, height);
 		SDL_UpdateYUVTexture(texture, NULL,
 			(const Uint8 *)frame->components[0].data, frame->components[0].width,
 			(const Uint8 *)frame->components[1].data, frame->components[1].width,
@@ -220,9 +233,93 @@ void Window::video_refresh()
 		SDL_Rect rect;
 		rect.x = 0;
 		rect.y = 0;
-		rect.w = frame->components[0].width;
-		rect.h = frame->components[0].height;
-		SDL_RenderCopy(renderer, texture, NULL, &rect);
+		rect.w = width;
+		rect.h = height;
+
+		SDL_Rect display_rect;
+		display_rect.x = 0;
+		display_rect.y = 0;
+		display_rect.w = width;
+		display_rect.h = height;
+
+		SDL_RenderCopy(renderer, texture, &rect, &display_rect);
+
+		if(_info_displayed)
+		{
+			SDL_Rect back_bar;
+			back_bar.x = 5;
+			back_bar.y = 5;
+			back_bar.w = 100;
+			back_bar.h = 40;
+			SDL_SetRenderDrawColor(renderer, 128, 128, 128, 128);
+			SDL_RenderFillRect(renderer, &back_bar);
+
+			size_t image_size = _image_queues.at(0).get_size();
+			size_t image_fill = _image_queues.at(0).get_fill_size();
+
+			SDL_Rect image_buffer;
+			image_buffer.x = 5;
+			image_buffer.y = 5;
+			image_buffer.w = 100.0 * image_fill / image_size;
+			image_buffer.h = 20;
+			SDL_SetRenderDrawColor(renderer, 55, 201, 34, 128);
+			SDL_RenderFillRect(renderer, &image_buffer);
+
+			size_t audio_size = _audio_queues.at(0).get_size();
+			size_t audio_fill = _audio_queues.at(0).get_fill_size();
+
+			SDL_Rect audio_buffer;
+			audio_buffer.x = 5;
+			audio_buffer.y = 25;
+			audio_buffer.w = 100.0 * audio_fill / audio_size;
+			audio_buffer.h = 20;
+			SDL_SetRenderDrawColor(renderer, 55, 201, 34, 128);
+			SDL_RenderFillRect(renderer, &audio_buffer);
+
+			if(_font)
+			{
+				int w, h;
+				SDL_GetWindowSize(window, &w, &h);
+
+				SDL_Rect back_tc;
+				back_tc.x = (0.5 * w) - 55;
+				back_tc.y = h - 30;
+				back_tc.w = 110;
+				back_tc.h = 25;
+				SDL_SetRenderDrawColor(renderer, 128, 128, 128, 128);
+				SDL_RenderFillRect(renderer, &back_tc);
+
+				std::stringstream ss;
+				{
+					ss << std::setfill('0');
+					float fps = 25.0;
+					int s = _displayFrameIndex / fps;
+					int m = s / 60;
+					int h = m / 60;
+					int frames = _displayFrameIndex % (int)fps;
+					int seconds = s % 60;
+					int minutes = m % 60;
+					int hours = h % 24;
+					ss << std::setw(2) << hours << ":";
+					ss << std::setw(2) << minutes << ":";
+					ss << std::setw(2) << seconds << ":";
+					ss << std::setw(2) << frames;
+				}
+
+				SDL_Color color = {255, 255, 255};
+				SDL_Surface* surfaceMessage = TTF_RenderText_Blended(_font, ss.str().c_str(), color);
+				SDL_Texture* message = SDL_CreateTextureFromSurface(renderer, surfaceMessage);
+
+				SDL_Rect text_tc;
+				text_tc.x = (0.5 * w) - 50;
+				text_tc.y = h - 30;
+				text_tc.w = 100;
+				text_tc.h = 25;
+
+				SDL_RenderCopy(renderer, message, NULL, &text_tc);
+			}
+		}
+
 		_displayFrameIndex += 1;
 
 		update_console_status();
@@ -289,17 +386,31 @@ void Window::fill_audio(void *udata, Uint8 *stream, int len)
 	}
 }
 
+template<class T>
+std::string get_bar(const T& queue)
+{
+	size_t size = queue.get_size();
+	size_t fill = queue.get_fill_size();
+
+	int ratio = 10.0 * fill / size;
+	std::string bar;
+	bar.insert(0, 10 - ratio, ' ');
+	for(int i = 0; i < ratio; ++i)
+	{
+		bar.insert(0, "\u2588");
+	}
+	bar.insert(0, "[");
+	bar += "]";
+
+	return bar;
+}
+
 void Window::update_console_status()
 {
-	size_t size = _image_queues.at(0).get_size();
-	size_t fill = _image_queues.at(0).get_fill_size();
-	int ratio = 10.0 * fill / size;
-	std::string x;
-	for(int i = 0; i < ratio; ++i)
-		x.insert(0, "\u2588");
-	std::string clean(10-ratio, ' ');
-
-	std::cout << "\r[" << x << clean << "] frame: " << _displayFrameIndex << "     " << std::flush;
+	// std::string image_bar = get_bar(_image_queues.at(0));
+	// std::string audio_bar = get_bar(_audio_queues.at(0));
+	// std::cout << "\r" << image_bar << " " << audio_bar << " frame: " << _displayFrameIndex << std::flush;
+	std::cout << "\r" << "frame: " << _displayFrameIndex << std::flush;
 }
 
 void Window::launch()
@@ -325,6 +436,9 @@ void Window::launch()
 						break;
 					case SDLK_s: // S: Step to next frame
 						// step_to_next_frame(cur_stream);
+						break;
+					case SDLK_i:
+						_info_displayed = !_info_displayed;
 						break;
 					default:
 						break;

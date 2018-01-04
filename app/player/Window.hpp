@@ -8,6 +8,8 @@
 #include "Reader.hpp"
 #include "MioQueue.hpp"
 
+struct _TTF_Font;
+
 class Window
 {
 public:
@@ -30,9 +32,12 @@ private:
 	static std::vector<MioQueue<ImageFrame>>  _image_queues;
 	static std::vector<MioQueue<AudioFrame>>  _audio_queues;
 
-	static bool                               _audio_enabled;
+	static _TTF_Font*                          _font;
+
 	static long int                           _readFrameIndex;
 	static long int                           _displayFrameIndex;
+	static bool                               _audio_enabled;
+	static bool                               _info_displayed;
 };
 
 #endif

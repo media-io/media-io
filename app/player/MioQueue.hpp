@@ -15,9 +15,9 @@ public:
 	MioQueue(size_t max_size);
 	~MioQueue();
 
-	size_t get_size(){ return _max_size; }
-	size_t get_fill_size(){ return _frames.size(); }
-	size_t is_full(){ return _frames.size() == _max_size; }
+	size_t get_size() const { return _max_size; }
+	size_t get_fill_size() const { return _frames.size(); }
+	size_t is_full() const { return _frames.size() == _max_size; }
 
 	size_t push(T* frame);
 	T* pop();

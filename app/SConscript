@@ -35,12 +35,14 @@ env.Alias("install", env.Install("$PREFIX/usr/bin", engineApp))
 
 sdl_libs = [
 	'SDL2',
+	'libSDL2_ttf',
 	'pthread'
 ]
 
 sdl_headers = [
 	'SDL2/SDL.h',
-	'SDL2/SDL_thread.h'
+	'SDL2/SDL_thread.h',
+	'SDL2/SDL_ttf.h'
 ]
 
 if(conf.CheckLibWithHeader(sdl_libs, sdl_headers, 'c')):
