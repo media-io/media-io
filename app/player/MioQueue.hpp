@@ -21,6 +21,7 @@ public:
 
 	size_t push(T* frame);
 	T* pop();
+	T* front();
 
 private:
 	std::vector<T*> _frames;
@@ -65,5 +66,17 @@ T* MioQueue<T>::pop()
 	return ptr;
 }
 
+template<class T>
+T* MioQueue<T>::front()
+{
+	SDL_LockMutex(_mutex);
+	T* ptr = nullptr;
+	if(_frames.size() > 0){
+		ptr = _frames.front();
+	}
+	SDL_CondSignal(_cond);
+	SDL_UnlockMutex(_mutex);
+	return ptr;
+}
 
 #endif

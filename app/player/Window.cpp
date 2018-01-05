@@ -209,9 +209,21 @@ static int realloc_texture(Uint32 new_format, SDL_BlendMode blendmode, int new_w
 	return 0;
 }
 
+clock_t previous_frame_time = clock();
+
 void Window::video_refresh()
 {
-	ImageFrame* frame = _image_queues.at(0).pop();
+	ImageFrame* frame = nullptr;
+	clock_t current_diff = clock() - previous_frame_time;
+	double remaining_time = (((float)current_diff)/CLOCKS_PER_SEC) - (1.f / 50.f);
+	
+	if(remaining_time < 0) {
+		frame = _image_queues.at(0).front();
+	}
+	else {
+		frame = _image_queues.at(0).pop();
+		previous_frame_time = clock();
+	}
 
 	if(frame != nullptr){
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -323,7 +335,7 @@ void Window::video_refresh()
 		_displayFrameIndex += 1;
 
 		update_console_status();
-		delete frame;
+		// delete frame;
 
 		SDL_RenderPresent(renderer);
 	}
@@ -352,20 +364,17 @@ static void toggle_full_screen()
 }
 
 void Window::refresh_loop_wait_event(SDL_Event *event) {
-	clock_t previous_frame_time;
+	
+	double remaining_time = 0;
 	SDL_PumpEvents();
 	while (!SDL_PeepEvents(event, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT)) {
-
-		clock_t current_diff = clock() - previous_frame_time;
-		double remaining_time = (((float)current_diff)/CLOCKS_PER_SEC) - (1.f / 25.f);
 		if (remaining_time > 0)
 			mio_usleep((int64_t)(remaining_time * 1000000.0));
+		remaining_time = REFRESH_RATE;
 
 		if (!paused || force_refresh){
-			previous_frame_time = clock();
 			video_refresh();
 			force_refresh = false;
-			// remaining_time = 1.0 / 30.0;
 		}
 		SDL_PumpEvents();
 	}
