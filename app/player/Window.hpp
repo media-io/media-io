@@ -5,7 +5,7 @@
 #include <vector>
 #include <SDL2/SDL.h>
 
-#include "Reader.hpp"
+#include <mediaio/reader/Reader.hpp>
 #include "MioQueue.hpp"
 
 struct _TTF_Font;

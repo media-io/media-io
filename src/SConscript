@@ -38,12 +38,23 @@ hostCLib = env.SharedLibrary(
 	],
 )
 
+readerLib = env.SharedLibrary(
+	'mediaio-reader',
+	Glob('mediaio/reader/*.cpp'),
+	LIBS = [
+		commonLib,
+		apiLib,
+		hostLib,
+	],
+)
+
 env.Alias('install', env.InstallVersionedLib('$PREFIX/usr/lib', commonLib))
 env.Alias('install', env.InstallVersionedLib('$PREFIX/usr/lib', apiLib))
 env.Alias('install', env.InstallVersionedLib('$PREFIX/usr/lib', hostLib))
 env.Alias('install', env.InstallVersionedLib('$PREFIX/usr/lib', hostCLib))
+env.Alias('install', env.InstallVersionedLib('$PREFIX/usr/lib', readerLib))
 
-paths = [
+h_paths = [
 	'mediaio/api/common',
 	'mediaio/api/data',
 	'mediaio/api/descriptor',
@@ -58,12 +69,23 @@ paths = [
 	'mediaio/api/generator',
 	'mediaio/api/filter',
 	'mediaio/api/analyser',
+	'mediaio/host_c',
 ]
 
-for path in paths:
+hpp_paths = [
+	'mediaio/common',
+	'mediaio/host',
+	'mediaio/reader',
+]
+
+for path in h_paths:
 	env.Alias('install', env.Install(os.path.join('$PREFIX/usr/include', path), Glob(os.path.join(path, "*.h"))))
+
+for path in hpp_paths:
+	env.Alias('install', env.Install(os.path.join('$PREFIX/usr/include', path), Glob(os.path.join(path, "*.hpp"))))
 
 Export('commonLib')
 Export('apiLib')
 Export('hostLib')
 Export('hostCLib')
+Export('readerLib')

@@ -15,19 +15,19 @@ public:
 	MioQueue(size_t max_size);
 	~MioQueue();
 
-	size_t get_size() const { return _max_size; }
+	size_t get_size()      const { return _max_size; }
 	size_t get_fill_size() const { return _frames.size(); }
-	size_t is_full() const { return _frames.size() == _max_size; }
+	size_t is_full()       const { return _frames.size() == _max_size; }
 
 	size_t push(T* frame);
-	T* pop();
-	T* front();
+	T*     pop();
+	T*     front();
 
 private:
 	std::vector<T*> _frames;
-	size_t                   _max_size;
-	SDL_mutex*               _mutex;
-	SDL_cond*                _cond;
+	size_t          _max_size;
+	SDL_mutex*      _mutex;
+	SDL_cond*       _cond;
 };
 
 template<class T>

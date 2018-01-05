@@ -5,6 +5,7 @@ Import('apiLib')
 Import('commonLib')
 Import('hostLib')
 Import('hostCLib')
+Import('readerLib')
 
 pluginsApp = env.Program(
 	"mediaio-plugins",
@@ -53,7 +54,7 @@ if(conf.CheckLibWithHeader(sdl_libs, sdl_headers, 'c')):
 			apiLib,
 			commonLib,
 			hostLib,
-			hostCLib,
+			readerLib,
 		] + sdl_libs
 	)
 	env.Alias("install", env.Install("$PREFIX/usr/bin", playerApp))
